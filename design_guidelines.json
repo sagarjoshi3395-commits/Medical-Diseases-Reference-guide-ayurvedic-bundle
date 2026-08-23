@@ -1,0 +1,122 @@
+{
+  "theme_and_art_direction": {
+    "name": "The Clinical Brutalist (Dark Mode Editorial)",
+    "description": "An Awwwards Site-of-the-Day level editorial dark mode. It mixes heavy brutalist typography with precise, clinical digital elements. Deep obsidian backgrounds, massive kinetic text, and surgical neon accents. It feels like an expensive, elite reference tool rather than a cheap PDF.",
+    "colors": {
+      "background": "#030303",
+      "surface": "#0C0C0C",
+      "surface_glass": "rgba(12, 12, 12, 0.6)",
+      "text_primary": "#F4F4F0",
+      "text_secondary": "#8A8A8E",
+      "accent_primary": "#FF3366",
+      "accent_secondary": "#00E5FF",
+      "border": "rgba(255, 255, 255, 0.08)"
+    },
+    "typography": {
+      "headings": {
+        "family": "Cabinet Grotesk, sans-serif",
+        "weight": "font-black",
+        "tracking": "tracking-tighter",
+        "style": "uppercase"
+      },
+      "body": {
+        "family": "Manrope, sans-serif",
+        "weight": "font-medium",
+        "tracking": "tracking-normal"
+      },
+      "numbers_and_labels": {
+        "family": "Space Mono, monospace",
+        "weight": "font-bold",
+        "tracking": "tracking-[0.2em]"
+      }
+    }
+  },
+  "motion_and_interaction": {
+    "libraries_required": ["framer-motion", "@studio-freight/react-lenis", "react-fast-marquee"],
+    "smooth_scroll": "MANDATORY: Wrap the entire app or main content in <ReactLenis root> for momentum scrolling.",
+    "hero_reveal": "Kinetic Typography: Text masked line-by-line reveal using framer-motion. Wrap each line of the H1 in an overflow-hidden div, and animate the inner text from translateY 100% to 0%.",
+    "book_3d_parallax": "Build a CSS 3D book using a wrapper with `perspective: 1200px`. Inside, use a `motion.div` with `transform-style: preserve-3d` connected to `useScroll` to map `scrollYProgress` to `rotateY` and `rotateX`. The book needs front cover, spine, back cover, and 3D page edges.",
+    "scroll_reveals": "Fade up and slightly scale in (0.95 to 1) for feature cards. Add subtle parallax to images using useScroll.",
+    "button_hover": "Scale up slightly (1.05), add a colored glow drop-shadow, and slide a hidden arrow icon into view."
+  },
+  "layout_and_grids": {
+    "spacing_system": "Generous spacing. Use py-32 or py-48 for main sections. gap-12 to gap-16 in bento grids.",
+    "bento_features": "Use the Tetris Grid mode. Mix col-span-4, col-span-8, row-span-2. Never use perfectly symmetric grids. Leave an empty grid cell for negative space.",
+    "manifesto_numbers": "Use massive absolute positioned numbers (text-[25vw] text-white/5 font-black leading-none) floating behind the manifesto text."
+  },
+  "components": {
+    "marquee": "Use react-fast-marquee. Very slow, font-mono, text-sm, border-y border-white/10, py-4. Content: bullet-separated names of medicines and trust signals.",
+    "cards": "Flat matte backgrounds (bg-[#0C0C0C]) with 1px border (border-white/10). No soft shadows. On hover: slight border color change to accent_secondary (#00E5FF).",
+    "pricing_card": "Elevated glassmorphism. backdrop-blur-2xl bg-white/5 border border-white/20. Glowing #FF3366 CTA button.",
+    "sticky_cta": "Fixed bottom center floating pill. backdrop-blur-xl border border-white/20 px-8 py-4 rounded-full shadow-2xl z-50 flex items-center gap-4."
+  },
+  "page_sections": [
+    {
+      "name": "Navigation",
+      "layout": "Fixed top, minimal. Logo left, Sticky 'Buy Now' button right. Glassmorphism background."
+    },
+    {
+      "name": "Hero Section",
+      "layout": "Min-h-screen relative flex items-center. Left side: Massive kinetic typography (H1: '2,000+ MEDICINES. ONE PDF.'). Right side: Parallax 3D Book Mockup floating in space.",
+      "content": "Subtitle: 'Tired of searching through multiple books, apps, & random screenshots?' Actions: Primary CTA 'Get Instant Access ₹290'."
+    },
+    {
+      "name": "Trust Marquee",
+      "layout": "Full width scrolling marquee.",
+      "content": "• DOCTORS • NURSES • PHARMACISTS • STUDENTS • 2,000+ ENTRIES • OFFLINE ACCESS •"
+    },
+    {
+      "name": "Manifesto (The Problem vs Solution)",
+      "layout": "Two stacked oversized sections. Huge background numbers ('01', '02'). High contrast typography.",
+      "content": "01: The Chaos (Too many sources, lost details). 02: The Masterbook (Simple, offline, instant search)."
+    },
+    {
+      "name": "Features Bento Grid (What's Inside)",
+      "layout": "Asymmetric bento grid (Tetris style). Mix wide cards, tall cards, and small square stat blocks.",
+      "content": "Highlight: Uses, Dosages, Side Effects, English + Hindi, Offline, Searchable."
+    },
+    {
+      "name": "Audience Selection",
+      "layout": "Dark moody section with clipped portrait photography and list of professions.",
+      "content": "Perfect for: Medical students, Nursing students, Clinic staff."
+    },
+    {
+      "name": "Pricing & CTA",
+      "layout": "Center aligned. Single massive pricing card with a vibrant gradient edge or glow.",
+      "content": "Pricing: ₹290 Only. One-time payment, Lifetime access. Instant download link."
+    },
+    {
+      "name": "Footer / Trust",
+      "layout": "Massive typography for logo, tiny utility text for disclaimers.",
+      "content": "Important Note: for educational and reference purposes only. Not medical advice."
+    }
+  ],
+  "image_urls": {
+    "abstract_texture": {
+      "url": "https://images.unsplash.com/photo-1781747046439-26ad580054ba?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzV8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMG1lZGljYWwlMjB0ZWNoJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3ODc1MjAyNTJ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract medical tech texture. Use as a subtle overlay blending into dark backgrounds, or as the cover texture for the 3D book mockup."
+    },
+    "student_studying": {
+      "url": "https://images.pexels.com/photos/12467838/pexels-photo-12467838.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Medical student studying. Use in the 'Who is this for?' or Manifesto section to show the real-world use case."
+    },
+    "doctor_portrait": {
+      "url": "https://images.pexels.com/photos/5722165/pexels-photo-5722165.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Dark mood doctor portrait. Use for Testimonials or the 'Used by Healthcare Professionals' trust section."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Install required dependencies: yarn add framer-motion @studio-freight/react-lenis react-fast-marquee @phosphor-icons/react clsx tailwind-merge lucide-react",
+    "Add 'Cabinet Grotesk', 'Manrope', and 'Space Mono' via Google Fonts or standard Web Font imports in index.css.",
+    "Implement the 3D Book Mockup purely in CSS with Framer Motion (NO Three.js needed to keep it lightweight). Use absolute positioning for the spine and pages with preserve-3d.",
+    "Ensure all text remains readable by applying WCAG AA standards. If using image backgrounds, use strong linear-gradient overlays.",
+    "Create the entire landing page as a single page application in App.js or split into components, but ensure Lenis is wrapping the content."
+  ],
+  "universal_guidelines": [
+    "CRITICAL: Do not center-align paragraphs. Use optical alignment. Headings can be centered if it serves the layout, but left-aligned text is preferred for readability.",
+    "CRITICAL: Do not use generic gradient backgrounds. Stick to the solid Obsidian (#030303) and Surface (#0C0C0C) colors to maintain the high-end brutalist feel.",
+    "Every interactive element MUST have a data-testid attribute for testing.",
+    "Buttons must have distinct hover states with subtle animations.",
+    "DO NOT use a fully transparent header; apply backdrop-blur-xl and a semi-transparent background color (e.g., bg-black/60) to keep navigation readable."
+  ]
+}
