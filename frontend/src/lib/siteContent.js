@@ -16,9 +16,11 @@ export const SAMPLES = [
   { title: "Edema / Swelling", hi: "सूजन", img: `${A}/3xbb49ud_ChatGPT%20Image%20Aug%2026%2C%202026%2C%2001_51_06%20AM%20%287%29.png`, guide: "disease" },
 ];
 
+// Bilingual close-up page (Fatigue & Weakness — English + Hindi)
+export const BILINGUAL_IMG = `${A}/8xbdmg6u_ChatGPT%20Image%20Aug%2026%2C%202026%2C%2001_51_05%20AM%20%283%29.png`;
+
 // Book covers (cropped from supplied bundle art) + combined bundle mockup
-export const COVERS = {
-  disease: "/covers/disease-cover.png",
+export const COVERS = {  disease: "/covers/disease-cover.png",
   medicine: "/covers/medicine-cover.png",
   bundle: `${A}/ibnlc2c9_ChatGPT%20Image%20Aug%2026%2C%202026%2C%2005_46_59%20AM.png`,
 };

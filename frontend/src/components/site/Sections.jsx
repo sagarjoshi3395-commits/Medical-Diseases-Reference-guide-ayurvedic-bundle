@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import * as Lucide from "lucide-react";
-import { Check, ArrowRight, Plus, Minus, ShieldAlert, Info, Globe2 } from "lucide-react";
+import { Check, ArrowRight, Plus, Minus, Info, Globe2 } from "lucide-react";
 import { Reveal, SectionHead, Eyebrow } from "./ui";
 import { useBuy } from "./BuyContext";
 import {
-  SAMPLES, COVERS, DISEASE_SECTIONS, MEDICINE_SECTIONS, DISEASE_CATEGORIES,
+  COVERS, BILINGUAL_IMG, DISEASE_SECTIONS, MEDICINE_SECTIONS, DISEASE_CATEGORIES,
   MEDICINE_CATEGORIES, HOW_PRESENTED, BILINGUAL_PAIRS, WHO_FOR,
 } from "../../lib/siteContent";
 
@@ -257,7 +257,7 @@ export const Bilingual = () => (
       </Reveal>
       <Reveal delay={0.1} className="order-1 md:order-2">
         <div className="mx-auto max-w-sm overflow-hidden rounded-2xl border border-line bg-white shadow-card">
-          <img src={SAMPLES[2].img} alt="Bilingual English and Hindi reference page close-up" className="w-full" loading="lazy" />
+          <img src={BILINGUAL_IMG} alt="Fatigue & Weakness bilingual English and Hindi reference page" className="w-full" loading="lazy" />
         </div>
       </Reveal>
     </div>
@@ -333,7 +333,6 @@ export const DisclaimerCard = () => (
           <p>The Medical Reference Guide is intended for education, study, revision and general awareness only. It is <strong className="text-navy">not medical advice, diagnosis, treatment guidance or a prescription</strong>.</p>
           <p>Medicine information should not be used to start, stop or change any medicine without advice from an appropriately qualified healthcare professional. <strong className="text-navy">No dosage guidance is provided.</strong></p>
           <p>Medical information changes over time. Readers should verify important information using current authoritative sources and seek professional medical advice when appropriate.</p>
-          <p className="flex items-start gap-2 font-semibold text-danger"><ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" />For emergencies or serious symptoms, contact an appropriate medical professional or emergency service.</p>
         </div>
       </div>
     </Reveal>
