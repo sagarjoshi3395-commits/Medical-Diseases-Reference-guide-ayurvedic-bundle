@@ -44,10 +44,9 @@ A landing/sales site that sells an illustrated **Medical Reference Guide Bundle*
 - **RecentSalesPill**: shows `SALES_TICKER_BASELINE + real paid orders in the last hour` — pulls from `/api/stats/recent-sales` (polls every 60s). Baseline `9` so it never reads 0.
 
 ## Confirmation Email (Resend)
-- On successful `/api/payment/verify`, backend sends an HTML email with both PDF download links (absolute URLs built from `PUBLIC_BASE_URL`).
-- Sender: `SENDER_EMAIL` (default `onboarding@resend.dev` — Resend sandbox; delivers only to your Resend signup email).
-- **Production**: verify a domain in Resend and set `SENDER_EMAIL=noreply@yourdomain.com` in `.env`.
-- Verified live: helper returned Resend id `0785e93e-74b4-4887-b13f-ae348897264e` on test call.
+- On successful `/api/payment/verify`, backend sends an HTML email with both PDF download links (absolute URLs from `PUBLIC_BASE_URL`).
+- Sender: **`Medical Reference Guide <support@ledgerkit.in>`** (domain verified in Resend, Hostinger DNS).
+- Verified live: Resend accepted send id `56607094-3990-4c1d-8224-c3a5801a6bf7`.
 
 ## Key API Endpoints
 - `GET  /api/config` — pricing + razorpay config
