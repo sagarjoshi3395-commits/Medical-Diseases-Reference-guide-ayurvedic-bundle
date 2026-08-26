@@ -2,7 +2,7 @@
 // Educational / reference positioning only. No diagnosis / prescription / outcome claims.
 
 export const BRAND = "Medical Reference Guide";
-export const DEFAULT_PRICE = 299; // overridden by /api/config
+export const DEFAULT_PRICE = 290; // overridden by /api/config
 export const CURRENCY = "INR";
 
 // Actual supplied sample pages (Disease Reference Guide — Chapter 13: Common Clinical Presentations)
