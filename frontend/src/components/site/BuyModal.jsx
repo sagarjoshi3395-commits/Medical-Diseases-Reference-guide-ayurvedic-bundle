@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,12 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
   const [reserved, setReserved] = useState(false);
   const navigate = useNavigate();
   const { expired } = useCountdown(config?.countdown_seconds ?? 600);
+
+  // Warm up the Razorpay checkout script as soon as the modal opens so it is
+  // already cached by the time the user taps Pay (removes the load delay).
+  useEffect(() => {
+    if (open) loadRazorpayScript();
+  }, [open]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -47,12 +53,16 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
     if (!valid()) return;
     setLoading(true);
     try {
-      const ok = await loadRazorpayScript();
+      // Run script load and order creation in parallel to cut wait time.
+      const [ok, orderRes] = await Promise.all([
+        loadRazorpayScript(),
+        axios.post(`${API}/payment/create-order`, {
+          ...form,
+          session_started_at: getSessionStartedAt(),
+        }),
+      ]);
       if (!ok) { toast.error("Could not load payment. Check your connection."); setLoading(false); return; }
-      const { data } = await axios.post(`${API}/payment/create-order`, {
-        ...form,
-        session_started_at: getSessionStartedAt(),
-      });
+      const { data } = orderRes;
       const options = {
         key: data.key_id,
         amount: data.amount,

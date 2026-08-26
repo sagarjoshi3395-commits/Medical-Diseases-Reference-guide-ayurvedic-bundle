@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend-only regression + performance verification of the Razorpay preload/parallelization change in BuyModal.jsx. All 5 requested scenarios PASS on desktop 1920x1080 and the CTA sweep on mobile 390x844, against REACT_APP_BACKEND_URL (https://med-guide-31.preview.emergentagent.com). (1) nav-buy opens buy-dialog; hero-buy, pricing-buy and sticky-buy also each open buy-dialog on mobile. (2) PRELOAD CONFIRMED: no script[src*='checkout.razorpay.com'] exists on page load (baseline false); within ~200ms of the modal opening the checkout.js script tag is injected and window.Razorpay becomes defined BEFORE any submit click - verified for all four CTAs. (3) Valid submit (Test QA User / qa.test@example.com / 9876543210) POSTed /api/payment/create-order -> HTTP 200 and the .razorpay-container overlay + api.razorpay.com/v1/checkout/public iframe rendered in 887ms after the Pay click (previously the script download happened inside this window). Price Summary shows 299 and 'Using as qa.test@example.com' is prefilled. Payment intentionally NOT completed (LIVE keys) - stopped at the overlay. (4) Empty-field submit still shows 'Please fill in your name, email and phone.' toast. (5) buy-input-email computed font-size is still exactly 16px (iOS auto-zoom fix intact). Zero pageerror events originated from the app; only the known harmless Razorpay-iframe console noise.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Landing page (390x844 mobile)", "issues": ["The 'Kabir from Chennai - Bought the Bundle - just now' social-proof toast sits bottom-left and visually overlaps/obscures the left part of the sticky 'Get ... \u20b9299' bar. The sticky-buy button is still clickable (test passed with a normal click), but consider raising the sticky bar or offsetting the toast upward on small screens."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional (carried over from iteration_1, still reproducible): Razorpay's own 'Contact details / Enter mobile number' step still appears even though prefill.contact is now normalized to '919876543210' (email prefills fine). If skipping this step matters, try passing '+919876543210' or the bare 10-digit number and confirm against Razorpay docs.",
+    "Optional design: avoid the social-proof toast overlapping the mobile sticky CTA bar."
+  ],
+  "critical_code_review_comments": [
+    "loadRazorpayScript() has no de-duplication guard: if it is called again before the first script's onload fires (e.g. modal closed and reopened quickly, or payNow racing the useEffect warmup) a second <script> tag is appended. Harmless today because the browser caches it and window.Razorpay is idempotent, but a `document.querySelector(\"script[src*='checkout.razorpay.com']\")` check (resolving on that node's load event) would be cleaner.",
+    "payNow still funnels every failure into one generic toast and discards err.response?.data?.detail, which makes live-key/order-creation failures hard to diagnose in production (unchanged from iteration_1)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (per request)", "frontend": "100% (5/5 scenarios)"},
+  "seed_data_creation": "None persistent. One Razorpay order created via /api/payment/create-order with throwaway data (Test QA User / qa.test@example.com / 9876543210); no payment attempted.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": false,
+  "test_credentials": "Not required; /app/memory/test_credentials.md not present in this fork.",
+  "context_for_next_testing_agent": "CTAs: nav-buy, hero-buy, pricing-buy, sticky-buy. Modal testids: buy-dialog, buy-input-name/email/phone, buy-submit-button. /api/config returns razorpay_enabled=true with LIVE keys - NEVER complete a payment, stop at .razorpay-container. Preload assertion pattern that works: evaluate !!document.querySelector(\"script[src*='checkout.razorpay.com/v1/checkout.js']\") right after buy-dialog appears (true within ~200ms) plus typeof window.Razorpay !== 'undefined'. Razorpay iframe emits harmless console errors in headless chromium (fingerprint pixel ERR_CONNECTION_REFUSED, unsafe header, accelerometer policy) - filter them.",
+  "rca_of_the_issue": "Original complaint: slow Razorpay checkout load because checkout.js was only fetched after the Pay click, serialized before the create-order POST. Fix verified in the running build: (a) useEffect on modal open warms the script (script node present ~200ms after open, window.Razorpay defined before submit), (b) payNow runs loadRazorpayScript() and the create-order POST via Promise.all so the (now already-resolved) script promise adds no latency, (c) preconnect/dns-prefetch to checkout.razorpay.com and api.razorpay.com are present in public/index.html lines 10-12. Measured Pay-click -> overlay-visible latency: 887ms, dominated by the create-order round trip and Razorpay's own iframe boot."
+}
