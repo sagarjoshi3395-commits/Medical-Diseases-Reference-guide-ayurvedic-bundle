@@ -4,7 +4,7 @@ import { Check, ArrowRight, X, Plus, Minus, ShieldAlert, Info, Globe2 } from "lu
 import { Reveal, SectionHead, Eyebrow } from "./ui";
 import { useBuy } from "./BuyContext";
 import {
-  SAMPLES, COMPARE, DISEASE_SECTIONS, MEDICINE_SECTIONS, DISEASE_CATEGORIES,
+  SAMPLES, COVERS, COMPARE, DISEASE_SECTIONS, MEDICINE_SECTIONS, DISEASE_CATEGORIES,
   MEDICINE_CATEGORIES, HOW_PRESENTED, BILINGUAL_PAIRS, WHO_FOR,
 } from "../../lib/siteContent";
 
@@ -82,7 +82,7 @@ export const BundleCards = () => {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <Reveal>
             <article className="card-soft h-full overflow-hidden">
-              <div className="aspect-[16/10] overflow-hidden bg-white"><img src={SAMPLES[1].img} alt="Illustrated disease reference page" className="h-full w-full object-cover object-top" loading="lazy" /></div>
+              <div className="grid place-items-center bg-gradient-to-br from-mist to-white p-6" style={{ minHeight: "260px" }}><img src={COVERS.disease} alt="Diseases Reference Guide book cover" className="max-h-64 w-auto drop-shadow-2xl" loading="lazy" /></div>
               <div className="p-6">
                 <span className="eyebrow">Guide 01</span>
                 <h3 className="mt-3 font-display text-2xl font-extrabold text-navy">Illustrated Disease Reference Guide</h3>
@@ -97,15 +97,7 @@ export const BundleCards = () => {
           </Reveal>
           <Reveal delay={0.1}>
             <article className="card-soft h-full overflow-hidden">
-              <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-navy to-teal">
-                <div className="absolute inset-0 grid place-items-center text-center text-white">
-                  <div>
-                    <Lucide.Pill className="mx-auto h-14 w-14 opacity-90" />
-                    <p className="mt-3 font-display text-xl font-extrabold">Medicine Reference</p>
-                    <p className="text-sm text-white/70">Structured visual sections</p>
-                  </div>
-                </div>
-              </div>
+              <div className="grid place-items-center bg-gradient-to-br from-mist to-white p-6" style={{ minHeight: "260px" }}><img src={COVERS.medicine} alt="Medicines Reference Guide book cover" className="max-h-64 w-auto drop-shadow-2xl" loading="lazy" /></div>
               <div className="p-6">
                 <span className="eyebrow">Guide 02</span>
                 <h3 className="mt-3 font-display text-2xl font-extrabold text-navy">Illustrated Medicine Reference Guide</h3>
@@ -256,6 +248,7 @@ export const WhatYouReceive = () => {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <Reveal>
             <div className="card-soft h-full p-6">
+              <img src={COVERS.disease} alt="Diseases Reference Guide book cover" className="mx-auto mb-5 max-h-56 w-auto drop-shadow-xl" loading="lazy" />
               <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-teal/10 text-teal"><Lucide.HeartPulse className="h-5 w-5" /></span><h3 className="font-display text-xl font-extrabold text-navy">Disease Reference Guide</h3></div>
               <p className="mt-2 text-sm font-semibold text-tealdark">Illustrated PDF</p>
               <ul className="mt-4 space-y-2.5">{disease.map((d) => (<li key={d} className="flex items-start gap-2.5 text-[15px] text-slateink"><Check className="mt-0.5 h-4 w-4 shrink-0 text-grassy" />{d}</li>))}</ul>
@@ -263,6 +256,7 @@ export const WhatYouReceive = () => {
           </Reveal>
           <Reveal delay={0.1}>
             <div className="card-soft h-full p-6">
+              <img src={COVERS.medicine} alt="Medicines Reference Guide book cover" className="mx-auto mb-5 max-h-56 w-auto drop-shadow-xl" loading="lazy" />
               <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-grape/10 text-grape"><Lucide.Pill className="h-5 w-5" /></span><h3 className="font-display text-xl font-extrabold text-navy">Medicine Reference Guide</h3></div>
               <p className="mt-2 text-sm font-semibold text-tealdark">Illustrated PDF</p>
               <ul className="mt-4 space-y-2.5">{medicine.map((d) => (<li key={d} className="flex items-start gap-2.5 text-[15px] text-slateink"><Check className="mt-0.5 h-4 w-4 shrink-0 text-grassy" />{d}</li>))}</ul>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Check, ArrowRight, ChevronDown, BookOpenCheck } from "lucide-react";
 import { Reveal, Eyebrow } from "./ui";
-import { HERO_CHIPS, SAMPLES } from "../../lib/siteContent";
+import { HERO_CHIPS, COVERS } from "../../lib/siteContent";
 import { useBuy } from "./BuyContext";
 
 export const Hero = () => {
@@ -57,19 +57,18 @@ export const Hero = () => {
           </Reveal>
         </div>
 
-        {/* RIGHT — bundle mockup */}
+        {/* RIGHT — bundle mockup (book covers) */}
         <Reveal delay={0.15} className="relative">
-          <div className="relative mx-auto max-w-md">
-            <div className="absolute -right-3 -top-4 z-20 flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-bold text-navy shadow-card">
+          <div className="relative mx-auto flex max-w-md items-end justify-center">
+            <div className="absolute -right-2 -top-4 z-30 flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-bold text-navy shadow-card">
               <BookOpenCheck className="h-4 w-4 text-teal" /> 2 Illustrated Reference Guides
             </div>
-            <div className="absolute left-8 top-8 w-[72%] rotate-[6deg] overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-              <img src={SAMPLES[2].img} alt="Fever disease reference page sample" className="w-full" loading="lazy" />
-            </div>
-            <div className="relative w-[80%] -rotate-3 overflow-hidden rounded-2xl border border-line bg-white shadow-card animate-float">
-              <img src={SAMPLES[0].img} alt="Chest Pain disease reference page sample" className="w-full" />
-            </div>
-            <div className="absolute -bottom-3 right-2 z-20 rounded-xl border border-line bg-white px-4 py-2 shadow-card">
+            {/* medicine cover (behind, right) */}
+            <img src={COVERS.medicine} alt="Medicines Reference Guide book cover" className="absolute right-0 z-10 w-[58%] translate-x-6 translate-y-2 rotate-6 drop-shadow-2xl" loading="lazy" />
+            {/* disease cover (front, left) */}
+            <img src={COVERS.disease} alt="Diseases Reference Guide book cover" className="relative z-20 w-[62%] -rotate-3 drop-shadow-2xl animate-float" />
+            {/* price tag */}
+            <div className="absolute -bottom-2 right-0 z-30 rounded-xl border border-line bg-white px-4 py-2 shadow-card">
               <div className="text-[11px] font-bold uppercase tracking-widest text-teal">One-time · Digital</div>
               <div className="font-display text-xl font-extrabold text-navy">₹{price}</div>
             </div>

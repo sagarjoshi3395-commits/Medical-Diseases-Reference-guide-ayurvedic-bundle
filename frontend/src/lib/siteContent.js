@@ -15,6 +15,26 @@ export const SAMPLES = [
   { title: "Edema / Swelling", hi: "सूजन", img: `${A}/3xbb49ud_ChatGPT%20Image%20Aug%2026%2C%202026%2C%2001_51_06%20AM%20%287%29.png`, guide: "disease" },
 ];
 
+// Book covers (cropped from supplied bundle art) + combined bundle mockup
+export const COVERS = {
+  disease: "/covers/disease-cover.png",
+  medicine: "/covers/medicine-cover.png",
+  bundle: `${A}/ibnlc2c9_ChatGPT%20Image%20Aug%2026%2C%202026%2C%2005_46_59%20AM.png`,
+};
+
+// Disease sample pages for the coverflow (chapter cover + supplied pages)
+export const DISEASE_SAMPLES = [
+  { title: "Diseases & Clinical Conditions", hi: "रोग एवं क्लिनिकल स्थितियाँ", img: `${A}/n9qyrzvs_ChatGPT%20Image%20Aug%2026%2C%202026%2C%2001_48_45%20AM%20%281%29.png` },
+  ...SAMPLES,
+];
+
+// Medicine sample pages (supplied) for the coverflow
+export const MEDICINE_SAMPLES = [
+  { title: "Salbutamol · Codeine", hi: "Respiratory & Pain reference", img: `${A}/0kf1ik4o_ChatGPT%20Image%20Aug%2025%2C%202026%2C%2002_18_29%20AM.png` },
+  { title: "Silver Sulfadiazine · Framycetin", hi: "Topical antimicrobial reference", img: `${A}/h7xmxtmr_ChatGPT%20Image%20Aug%2025%2C%202026%2C%2001_02_04%20AM.png` },
+  { title: "Alprazolam · Folic Acid", hi: "CNS & Vitamin reference", img: `${A}/xvenntzt_ChatGPT%20Image%20Aug%2024%2C%202026%2C%2008_28_15%20PM.png` },
+];
+
 export const HERO_CHIPS = [
   "Disease Reference Guide",
   "Medicine Reference Guide",
