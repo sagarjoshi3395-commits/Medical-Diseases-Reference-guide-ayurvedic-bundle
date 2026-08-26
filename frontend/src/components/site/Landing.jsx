@@ -6,6 +6,7 @@ import { SamplePages } from "./SamplePages";
 import { Pricing } from "./Pricing";
 import { Faq } from "./Faq";
 import { Footer } from "./Footer";
+import { SalesTicker } from "./SalesTicker";
 
 export const Landing = () => (
   <>
@@ -30,5 +31,6 @@ export const Landing = () => (
     </main>
     <Footer />
     <StickyCta />
+    <SalesTicker />
   </>
 );

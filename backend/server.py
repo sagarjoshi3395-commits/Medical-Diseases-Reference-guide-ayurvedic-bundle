@@ -9,12 +9,14 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import razorpay
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+from email_service import send_purchase_email  # noqa: E402
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -106,6 +108,18 @@ async def get_config():
         "razorpay_enabled": RAZORPAY_ENABLED,
         "key_id": RAZORPAY_KEY_ID if RAZORPAY_ENABLED else "",
     }
+
+
+@api_router.get("/stats/recent-sales")
+async def recent_sales():
+    """Public marketing endpoint: number of paid orders in the last hour + a baseline."""
+    baseline = int(os.environ.get('SALES_TICKER_BASELINE', '9'))
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+    real_count = await db.orders.count_documents({
+        "status": "paid",
+        "paid_at": {"$gte": one_hour_ago.isoformat()},
+    })
+    return {"count": baseline + real_count, "window_hours": 1}
 
 
 @api_router.post("/status", response_model=StatusCheck)
@@ -241,6 +255,25 @@ async def verify_payment(input: PaymentVerify):
             "paid_at": datetime.now(timezone.utc).isoformat(),
         }},
     )
+
+    # Send confirmation email (non-blocking failure)
+    try:
+        public_base = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
+        if not public_base:
+            public_base = os.environ.get('CORS_ORIGINS', '').split(',')[0].rstrip('/') or ''
+        api_base = f"{public_base}/api" if public_base and not public_base.endswith('/api') else (public_base or '/api')
+        disease_url = f"{api_base}/download/{order['id']}?token={download_token}&file=disease"
+        medicine_url = f"{api_base}/download/{order['id']}?token={download_token}&file=medicine"
+        await send_purchase_email(
+            to_email=order.get("email"),
+            name=order.get("name") or "",
+            order_id=order["id"],
+            disease_url=disease_url,
+            medicine_url=medicine_url,
+        )
+    except Exception as e:
+        logger.error(f"Post-payment email dispatch failed: {e}")
+
     return {
         "success": True,
         "order_id": order["id"],

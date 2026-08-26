@@ -4,6 +4,7 @@ import { Reveal, SectionHead } from "./ui";
 import { useBuy } from "./BuyContext";
 import { useCountdown } from "../../lib/countdown";
 import { CountdownBadge } from "./CountdownBadge";
+import { RecentSalesPill } from "./SalesTicker";
 
 export const Pricing = () => {
   const { openBuy, config } = useBuy();
@@ -40,6 +41,9 @@ export const Pricing = () => {
             <p className="mt-1 text-sm text-white/70">One-time purchase</p>
             <div className="mt-4 flex justify-center">
               <CountdownBadge variant="banner" className="w-full max-w-xs" />
+            </div>
+            <div className="mt-3 flex justify-center">
+              <RecentSalesPill />
             </div>
           </div>
           <div className="p-8">
