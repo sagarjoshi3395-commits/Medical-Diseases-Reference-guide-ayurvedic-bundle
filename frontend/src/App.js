@@ -1,48 +1,41 @@
-import { useState } from "react";
+import React, { useEffect } from "react";
 import "@/App.css";
-import { ReactLenis } from "lenis/react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
+import { BuyProvider } from "./components/site/BuyContext";
+import { Landing } from "./components/site/Landing";
+import Success from "./pages/Success";
+import Failed from "./pages/Failed";
+import Policy from "./pages/Policy";
 
-import { Nav } from "./components/landing/Nav";
-import { Hero } from "./components/landing/Hero";
-import { TrustMarquee } from "./components/landing/TrustMarquee";
-import { Manifesto } from "./components/landing/Manifesto";
-import { Features } from "./components/landing/Features";
-import { HowItHelps } from "./components/landing/HowItHelps";
-import { Audience } from "./components/landing/Audience";
-import { Testimonials } from "./components/landing/Testimonials";
-import { Pricing } from "./components/landing/Pricing";
-import { FAQ } from "./components/landing/FAQ";
-import { Footer } from "./components/landing/Footer";
-import { StickyCTA } from "./components/landing/StickyCTA";
-import { BuyDialog } from "./components/landing/BuyDialog";
+function ScrollManager() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) {
+      const el = document.querySelector(hash);
+      if (el) { el.scrollIntoView({ behavior: "smooth" }); return; }
+    }
+    window.scrollTo(0, 0);
+  }, [pathname, hash]);
+  return null;
+}
 
 function App() {
-  const [buyOpen, setBuyOpen] = useState(false);
-  const onBuy = () => setBuyOpen(true);
-
   return (
-    <ReactLenis root options={{ lerp: 0.09, smoothWheel: true }}>
-      <div className="App relative min-h-screen bg-obsidian">
-        <div className="grain" />
-        <Nav onBuy={onBuy} />
-        <main>
-          <Hero onBuy={onBuy} />
-          <TrustMarquee />
-          <Manifesto />
-          <Features />
-          <HowItHelps />
-          <Audience />
-          <Testimonials />
-          <Pricing onBuy={onBuy} />
-          <FAQ />
-        </main>
-        <Footer onBuy={onBuy} />
-        <StickyCTA onBuy={onBuy} />
-        <BuyDialog open={buyOpen} onOpenChange={setBuyOpen} />
-        <Toaster theme="dark" position="top-center" richColors />
-      </div>
-    </ReactLenis>
+    <div className="App min-h-screen bg-white">
+      <BrowserRouter>
+        <BuyProvider>
+          <ScrollManager />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/success" element={<Success />} />
+            <Route path="/failed" element={<Failed />} />
+            <Route path="/:type" element={<Policy />} />
+          </Routes>
+          <Toaster position="top-center" richColors />
+        </BuyProvider>
+      </BrowserRouter>
+    </div>
   );
 }
 

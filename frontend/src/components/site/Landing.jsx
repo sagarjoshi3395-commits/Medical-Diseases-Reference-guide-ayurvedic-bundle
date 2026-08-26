@@ -1,0 +1,34 @@
+import React from "react";
+import { Navbar, StickyCta } from "./Navbar";
+import { Hero } from "./Hero";
+import { PreviewStrip, WhyCreated, BundleCards, DiseaseTopics, MedicineCategories, HowPresented, Bilingual, WhoFor, WhatYouReceive, DisclaimerCard, AccessSteps, FinalCta } from "./Sections";
+import { SamplePages } from "./SamplePages";
+import { Pricing } from "./Pricing";
+import { Faq } from "./Faq";
+import { Footer } from "./Footer";
+
+export const Landing = () => (
+  <>
+    <Navbar />
+    <main>
+      <Hero />
+      <PreviewStrip />
+      <WhyCreated />
+      <BundleCards />
+      <DiseaseTopics />
+      <MedicineCategories />
+      <SamplePages />
+      <HowPresented />
+      <Bilingual />
+      <WhoFor />
+      <WhatYouReceive />
+      <DisclaimerCard />
+      <AccessSteps />
+      <Pricing />
+      <Faq />
+      <FinalCta />
+    </main>
+    <Footer />
+    <StickyCta />
+  </>
+);

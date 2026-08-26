@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -10,6 +11,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 
+import razorpay
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,17 +21,29 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Create a router with the /api prefix
+# Product / payment configuration
+PRODUCT_NAME = os.environ.get('PRODUCT_NAME', 'Medical Reference Guide Bundle')
+PRODUCT_PRICE = int(os.environ.get('PRODUCT_PRICE', '299'))  # INR rupees
+CURRENCY = os.environ.get('CURRENCY', 'INR')
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '').strip()
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '').strip()
+PDF_PATH = os.environ.get('PDF_PATH', str(ROOT_DIR / 'assets' / 'medical-reference-guide.pdf'))
+
+RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
+razor_client = None
+if RAZORPAY_ENABLED:
+    razor_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
+app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 
-# Define Models
+# ---------------- Models ----------------
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")
-
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     client_name: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -41,7 +55,6 @@ class StatusCheckCreate(BaseModel):
 
 class Lead(BaseModel):
     model_config = ConfigDict(extra="ignore")
-
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     email: EmailStr
@@ -57,29 +70,51 @@ class LeadCreate(BaseModel):
     source: Optional[str] = "landing_buy"
 
 
-# Add your routes to the router instead of directly to app
+class OrderCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+    email: EmailStr
+    phone: str = Field(..., min_length=6, max_length=20)
+
+
+class PaymentVerify(BaseModel):
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+
+
+# ---------------- Routes ----------------
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Medical Reference Guide API"}
+
+
+@api_router.get("/config")
+async def get_config():
+    return {
+        "product": PRODUCT_NAME,
+        "price": PRODUCT_PRICE,
+        "currency": CURRENCY,
+        "razorpay_enabled": RAZORPAY_ENABLED,
+        "key_id": RAZORPAY_KEY_ID if RAZORPAY_ENABLED else "",
+    }
 
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
+    status_obj = StatusCheck(**input.model_dump())
     doc = status_obj.model_dump()
     doc['timestamp'] = doc['timestamp'].isoformat()
-    _ = await db.status_checks.insert_one(doc)
+    await db.status_checks.insert_one(doc)
     return status_obj
 
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    return status_checks
+    checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+    for c in checks:
+        if isinstance(c['timestamp'], str):
+            c['timestamp'] = datetime.fromisoformat(c['timestamp'])
+    return checks
 
 
 @api_router.post("/leads", response_model=Lead)
@@ -100,7 +135,122 @@ async def get_leads():
     return leads
 
 
-# Include the router in the main app
+@api_router.post("/payment/create-order")
+async def create_order(input: OrderCreate):
+    if not RAZORPAY_ENABLED:
+        raise HTTPException(status_code=503, detail="Payment is not configured yet.")
+
+    amount_paise = PRODUCT_PRICE * 100
+    order_uuid = str(uuid.uuid4())
+    receipt = f"mrg_{order_uuid[:8]}"  # <= 40 chars
+    try:
+        rp_order = razor_client.order.create({
+            "amount": amount_paise,
+            "currency": CURRENCY,
+            "receipt": receipt,
+            "payment_capture": 1,
+            "notes": {"product": PRODUCT_NAME, "email": input.email},
+        })
+    except Exception as e:
+        logger.error(f"Razorpay order creation failed: {e}")
+        raise HTTPException(status_code=502, detail="Could not create payment order.")
+
+    doc = {
+        "id": order_uuid,
+        "razorpay_order_id": rp_order["id"],
+        "amount": amount_paise,
+        "currency": CURRENCY,
+        "name": input.name,
+        "email": input.email,
+        "phone": input.phone,
+        "status": "created",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.orders.insert_one(doc)
+
+    return {
+        "order_id": order_uuid,
+        "razorpay_order_id": rp_order["id"],
+        "amount": amount_paise,
+        "currency": CURRENCY,
+        "key_id": RAZORPAY_KEY_ID,
+        "product": PRODUCT_NAME,
+        "name": input.name,
+        "email": input.email,
+        "phone": input.phone,
+    }
+
+
+@api_router.post("/payment/verify")
+async def verify_payment(input: PaymentVerify):
+    if not RAZORPAY_ENABLED:
+        raise HTTPException(status_code=503, detail="Payment is not configured yet.")
+
+    order = await db.orders.find_one({"razorpay_order_id": input.razorpay_order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found.")
+
+    try:
+        razor_client.utility.verify_payment_signature({
+            "razorpay_order_id": input.razorpay_order_id,
+            "razorpay_payment_id": input.razorpay_payment_id,
+            "razorpay_signature": input.razorpay_signature,
+        })
+    except Exception as e:
+        logger.warning(f"Signature verification failed: {e}")
+        await db.orders.update_one(
+            {"razorpay_order_id": input.razorpay_order_id},
+            {"$set": {"status": "verification_failed"}},
+        )
+        raise HTTPException(status_code=400, detail="Payment verification failed.")
+
+    download_token = str(uuid.uuid4())
+    await db.orders.update_one(
+        {"razorpay_order_id": input.razorpay_order_id},
+        {"$set": {
+            "status": "paid",
+            "payment_id": input.razorpay_payment_id,
+            "download_token": download_token,
+            "paid_at": datetime.now(timezone.utc).isoformat(),
+        }},
+    )
+    return {
+        "success": True,
+        "order_id": order["id"],
+        "download_token": download_token,
+        "name": order.get("name"),
+        "email": order.get("email"),
+    }
+
+
+@api_router.get("/order/{order_id}")
+async def get_order(order_id: str):
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found.")
+    return {
+        "order_id": order["id"],
+        "status": order.get("status"),
+        "name": order.get("name"),
+        "paid": order.get("status") == "paid",
+        "pdf_available": os.path.exists(PDF_PATH),
+    }
+
+
+@api_router.get("/download/{order_id}")
+async def download_pdf(order_id: str, token: str):
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found.")
+    if order.get("status") != "paid":
+        raise HTTPException(status_code=403, detail="Payment not completed for this order.")
+    if not token or token != order.get("download_token"):
+        raise HTTPException(status_code=403, detail="Invalid download token.")
+    if not os.path.exists(PDF_PATH):
+        raise HTTPException(status_code=404, detail="The guide file is being prepared. Please contact support.")
+    return FileResponse(PDF_PATH, media_type="application/pdf", filename="Medical-Reference-Guide.pdf")
+
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -110,12 +260,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 
 @app.on_event("shutdown")

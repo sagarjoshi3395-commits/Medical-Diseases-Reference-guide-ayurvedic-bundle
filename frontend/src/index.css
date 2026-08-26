@@ -1,125 +1,54 @@
-@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,900,700,500,400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-    :root {
-        --background: 0 0% 1.2%;
-        --foreground: 60 9% 95%;
-        --card: 0 0% 5%;
-        --card-foreground: 60 9% 95%;
-        --popover: 0 0% 4%;
-        --popover-foreground: 60 9% 95%;
-        --primary: 345 100% 60%;
-        --primary-foreground: 0 0% 100%;
-        --secondary: 0 0% 9%;
-        --secondary-foreground: 60 9% 95%;
-        --muted: 0 0% 9%;
-        --muted-foreground: 240 3% 55%;
-        --accent: 0 0% 9%;
-        --accent-foreground: 60 9% 95%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 12%;
-        --input: 0 0% 12%;
-        --ring: 345 100% 60%;
-        --radius: 0.5rem;
-    }
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 210 45% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 45% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 45% 14%;
+    --primary: 186 84% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 205 40% 96%;
+    --secondary-foreground: 210 45% 14%;
+    --muted: 205 40% 96%;
+    --muted-foreground: 215 16% 45%;
+    --accent: 205 40% 96%;
+    --accent-foreground: 210 45% 14%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 208 40% 92%;
+    --input: 208 40% 92%;
+    --ring: 186 84% 35%;
+    --radius: 1rem;
+  }
 }
 
 @layer base {
-    * {
-        @apply border-border;
-    }
-    html {
-        scroll-behavior: auto;
-    }
-    body {
-        margin: 0;
-        background-color: #030303;
-        color: #F4F4F0;
-        font-family: 'Manrope', sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        overflow-x: hidden;
-    }
-    ::selection {
-        background: #FF3366;
-        color: #fff;
-    }
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-white text-ink font-body antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1, h2, h3, h4 { @apply font-display; }
 }
 
-@layer utilities {
-    .font-display {
-        font-family: 'Cabinet Grotesk', sans-serif;
-    }
-    .font-mono {
-        font-family: 'Space Mono', monospace;
-    }
-    .text-balance {
-        text-wrap: balance;
-    }
-    .grain {
-        position: fixed;
-        inset: 0;
-        z-index: 100;
-        pointer-events: none;
-        opacity: 0.06;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-    .glow-accent {
-        box-shadow: 0 0 40px -8px rgba(255, 51, 102, 0.6);
-    }
-    .radial-fade {
-        background: radial-gradient(circle at 50% 40%, rgba(255,51,102,0.14), transparent 60%);
-    }
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-[1200px] px-5 sm:px-6 lg:px-8; }
+  .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-full bg-teal px-6 py-3.5 text-base font-bold text-white shadow-glow transition-all hover:bg-tealdark hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60; }
+  .btn-navy { @apply inline-flex items-center justify-center gap-2 rounded-full bg-navy px-6 py-3.5 text-base font-bold text-white transition-all hover:bg-navydark hover:-translate-y-0.5; }
+  .btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-full border border-line bg-white px-6 py-3.5 text-base font-semibold text-navy transition-all hover:border-teal/50 hover:bg-mist; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-1.5 text-sm font-semibold text-slateink; }
+  .eyebrow { @apply inline-flex items-center gap-2 rounded-full bg-teal/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-tealdark; }
+  .card-soft { @apply rounded-2xl border border-line bg-white shadow-soft; }
+  .h-section { @apply font-display text-3xl font-extrabold leading-tight text-navy sm:text-4xl md:text-[2.6rem]; }
 }
 
-/* hide default scrollbar for lenis smooth feel */
-::-webkit-scrollbar {
-    width: 8px;
-}
-::-webkit-scrollbar-track {
-    background: #030303;
-}
-::-webkit-scrollbar-thumb {
-    background: #1a1a1a;
-    border-radius: 8px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #FF3366;
-}
-
-@layer base {
-    [data-debug-wrapper="true"] {
-        display: contents !important;
-    }
-    [data-debug-wrapper="true"] > * {
-        margin-left: inherit;
-        margin-right: inherit;
-        margin-top: inherit;
-        margin-bottom: inherit;
-        padding-left: inherit;
-        padding-right: inherit;
-        padding-top: inherit;
-        padding-bottom: inherit;
-        column-gap: inherit;
-        row-gap: inherit;
-        gap: inherit;
-        border-left-width: inherit;
-        border-right-width: inherit;
-        border-top-width: inherit;
-        border-bottom-width: inherit;
-        border-left-style: inherit;
-        border-right-style: inherit;
-        border-top-style: inherit;
-        border-bottom-style: inherit;
-        border-left-color: inherit;
-        border-right-color: inherit;
-        border-top-color: inherit;
-        border-bottom-color: inherit;
-    }
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
