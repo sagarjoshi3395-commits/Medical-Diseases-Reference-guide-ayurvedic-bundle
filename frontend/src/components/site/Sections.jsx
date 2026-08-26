@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import * as Lucide from "lucide-react";
-import { Check, ArrowRight, X, Plus, Minus, ShieldAlert, Info, Globe2 } from "lucide-react";
+import { Check, ArrowRight, Plus, Minus, ShieldAlert, Info, Globe2 } from "lucide-react";
 import { Reveal, SectionHead, Eyebrow } from "./ui";
 import { useBuy } from "./BuyContext";
 import {
-  SAMPLES, COVERS, COMPARE, DISEASE_SECTIONS, MEDICINE_SECTIONS, DISEASE_CATEGORIES,
+  SAMPLES, COVERS, DISEASE_SECTIONS, MEDICINE_SECTIONS, DISEASE_CATEGORIES,
   MEDICINE_CATEGORIES, HOW_PRESENTED, BILINGUAL_PAIRS, WHO_FOR,
 } from "../../lib/siteContent";
 
@@ -13,70 +13,116 @@ const Icon = ({ name, className }) => {
   return <C className={className} />;
 };
 
-/* 2. PRODUCT PREVIEW STRIP */
-export const PreviewStrip = () => (
-  <section className="border-y border-line bg-mist">
-    <div className="container-x py-14">
-      <Reveal><SectionHead eyebrow="A Quick Look" title="See What's Inside" sub="Colourful, infographic-style pages — the same format you'll get across the guides." /></Reveal>
-      <div className="mt-9 grid grid-cols-2 gap-4 md:grid-cols-4">
-        {SAMPLES.slice(0, 4).map((s, i) => (
-          <Reveal key={s.title} delay={i * 0.06}>
-            <figure className="group card-soft overflow-hidden">
-              <div className="aspect-[3/4] overflow-hidden bg-white">
-                <img src={s.img} alt={`${s.title} illustrated reference page`} className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+/* WHAT'S INSIDE — highlights overview (distinct from sample previews) */
+export const InsideHighlights = () => {
+  const items = [
+    { icon: "BookOpenText", t: "2 Illustrated Guides", d: "Disease + Medicine reference PDFs bundled together." },
+    { icon: "LayoutGrid", t: "140+ Topics", d: "Diseases & medicines organised chapter-by-chapter." },
+    { icon: "Languages", t: "English + Hindi", d: "Bilingual explanations included where provided." },
+    { icon: "Timer", t: "Quick Revision", d: "Scannable, sectioned layout built for fast review." },
+    { icon: "TriangleAlert", t: "Red Flags", d: "Key warning signs visually separated for awareness.", danger: true },
+    { icon: "Smartphone", t: "Digital PDF Access", d: "Read on your phone, tablet or laptop, anytime." },
+  ];
+  return (
+    <section id="inside" className="container-x py-16 md:py-20 scroll-mt-20">
+      <Reveal><SectionHead eyebrow="What's Inside" title="Everything in the Bundle, at a Glance" sub="A quick overview of what makes these guides easy to study and revise — no repeated pages, just the essentials." /></Reveal>
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((it, i) => (
+          <Reveal key={it.t} delay={(i % 3) * 0.06}>
+            <div className={`card-soft flex h-full items-start gap-4 p-6 transition-all hover:-translate-y-1 hover:shadow-card ${it.danger ? "border-danger/25" : ""}`}>
+              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${it.danger ? "bg-danger/10 text-danger" : "bg-teal/10 text-teal"}`}><Icon name={it.icon} className="h-6 w-6" /></span>
+              <div>
+                <h3 className="font-display text-lg font-extrabold text-navy">{it.t}</h3>
+                <p className="mt-1 text-[15px] text-slateink">{it.d}</p>
               </div>
-              <figcaption className="flex items-center justify-between px-3.5 py-3">
-                <span className="text-sm font-bold text-navy">{s.title}</span>
-                <span className="text-xs text-slateink">{s.hi}</span>
-              </figcaption>
-            </figure>
+            </div>
           </Reveal>
         ))}
       </div>
-      <div className="mt-8 text-center">
-        <a href="#samples" className="btn-navy">Explore Sample Pages <ArrowRight className="h-4 w-4" /></a>
-      </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
-/* 4. WHY THIS GUIDE WAS CREATED */
-export const WhyCreated = () => (
-  <section className="container-x py-16 md:py-20">
-    <Reveal><SectionHead eyebrow="The Why" title="Medical Information Can Be Difficult to Review"
-      sub="Topics often spread definitions, causes, symptoms, assessment points, precautions and warning signs across large amounts of text. This guide reorganises selected information into visual, structured reference pages that are easier to browse and revise." /></Reveal>
-    <div className="mx-auto mt-10 grid max-w-4xl items-stretch gap-4 md:grid-cols-[1fr_auto_1fr]">
-      <Reveal className="h-full">
-        <div className="h-full rounded-2xl border border-line bg-mist p-6">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-slateink">Traditional Notes</span>
-          <ul className="mt-4 space-y-3">
-            {COMPARE.before.points.map((p) => (
-              <li key={p} className="flex items-center gap-3 text-[15px] text-slateink"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-200 text-slate-500"><X className="h-3.5 w-3.5" /></span>{p}</li>
-            ))}
-          </ul>
+/* WHY THIS GUIDE WAS CREATED — engaging comparison */
+export const WhyCreated = () => {
+  const before = [
+    { icon: "AlignLeft", t: "Long walls of dense text" },
+    { icon: "Shuffle", t: "Scattered, hard-to-find information" },
+    { icon: "EyeOff", t: "Few visual cues or diagrams" },
+    { icon: "Hourglass", t: "Slow, tiring revision sessions" },
+  ];
+  const after = [
+    { icon: "LayoutGrid", t: "Clean, structured sections" },
+    { icon: "Image", t: "Illustrated concepts & diagrams" },
+    { icon: "Highlighter", t: "Key points visually highlighted" },
+    { icon: "Zap", t: "Fast, quick-reference layout" },
+  ];
+  return (
+    <section className="border-y border-line bg-gradient-to-b from-white to-mist">
+      <div className="container-x py-16 md:py-20">
+        <Reveal><SectionHead eyebrow="The Why" title="Medical Info Shouldn't Be This Hard to Revise"
+          sub="Definitions, causes, symptoms, assessment points and warning signs are usually buried in walls of text. We reorganise selected information into visual, structured pages that are far easier to browse and remember." /></Reveal>
+
+        <div className="relative mx-auto mt-12 grid max-w-4xl items-stretch gap-6 md:grid-cols-2">
+          {/* Before */}
+          <Reveal className="h-full">
+            <div className="relative h-full overflow-hidden rounded-3xl border border-rose-200 bg-rose-50/60 p-7">
+              <div className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-rose-100 text-rose-500"><Lucide.FileText className="h-5 w-5" /></span>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-rose-400">The old way</p>
+                  <h3 className="font-display text-xl font-extrabold text-navy">Traditional Notes</h3>
+                </div>
+              </div>
+              <ul className="mt-5 space-y-3">
+                {before.map((p) => (
+                  <li key={p.t} className="flex items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5 text-[15px] text-slate-600">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-rose-100 text-rose-500"><Icon name={p.icon} className="h-4 w-4" /></span>
+                    {p.t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+
+          {/* After */}
+          <Reveal delay={0.1} className="h-full">
+            <div className="relative h-full overflow-hidden rounded-3xl border-2 border-teal/40 bg-gradient-to-br from-teal/10 to-grassy/10 p-7 shadow-glow">
+              <span className="absolute right-5 top-5 rounded-full bg-teal px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Recommended</span>
+              <div className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-teal text-white"><Lucide.Sparkles className="h-5 w-5" /></span>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-tealdark">The visual way</p>
+                  <h3 className="font-display text-xl font-extrabold text-navy">Medical Reference Guide</h3>
+                </div>
+              </div>
+              <ul className="mt-5 space-y-3">
+                {after.map((p) => (
+                  <li key={p.t} className="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-[15px] font-semibold text-navy shadow-soft">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-teal/15 text-teal"><Icon name={p.icon} className="h-4 w-4" /></span>
+                    {p.t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+
+          {/* VS badge */}
+          <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:block">
+            <span className="grid h-14 w-14 place-items-center rounded-full border-4 border-white bg-navy font-display text-sm font-extrabold text-white shadow-card">VS</span>
+          </div>
         </div>
-      </Reveal>
-      <div className="hidden items-center justify-center md:flex"><span className="rounded-full border border-line bg-white px-3 py-1 text-xs font-bold text-slateink shadow-soft">VS.</span></div>
-      <Reveal delay={0.1} className="h-full">
-        <div className="h-full rounded-2xl border-2 border-teal/30 bg-teal/5 p-6">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-tealdark">Medical Reference Guide</span>
-          <ul className="mt-4 space-y-3">
-            {COMPARE.after.points.map((p) => (
-              <li key={p} className="flex items-center gap-3 text-[15px] font-semibold text-navy"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-teal/15 text-teal"><Check className="h-3.5 w-3.5" /></span>{p}</li>
-            ))}
-          </ul>
-        </div>
-      </Reveal>
-    </div>
-    <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-slateink">A supplementary reference — designed to sit alongside your textbooks and course material, not to replace them.</p>
-  </section>
-);
+        <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-slateink">A supplementary reference designed to sit alongside your textbooks and course material — not to replace them.</p>
+      </div>
+    </section>
+  );
+};
 
 /* 5. TWO GUIDES — ONE BUNDLE */
 export const BundleCards = () => {
   const { openBuy } = useBuy();
   return (
-    <section id="inside" className="border-y border-line bg-mist scroll-mt-20">
+    <section id="bundle" className="border-y border-line bg-mist scroll-mt-20">
       <div className="container-x py-16 md:py-20">
         <Reveal><SectionHead eyebrow="What's Inside" title="Explore the Complete Reference Bundle" /></Reveal>
         <div className="mt-10 grid gap-6 lg:grid-cols-2">

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { XCircle, Home, RotateCcw } from "lucide-react";
 import { Logo } from "../components/site/Logo";
 import { useBuy } from "../components/site/BuyContext";
+import { SUPPORT_EMAIL } from "../lib/siteContent";
 
 export default function Failed() {
   const [params] = useSearchParams();
@@ -20,6 +21,7 @@ export default function Failed() {
           <button onClick={openBuy} className="btn-primary"><RotateCcw className="h-4 w-4" /> Try Again</button>
           <Link to="/" className="btn-ghost"><Home className="h-4 w-4" /> Back to Home</Link>
         </div>
+        <p className="mt-8 max-w-md text-sm text-slateink">Charged but didn't get access? Email <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-teal">{SUPPORT_EMAIL}</a> with your payment reference and we'll sort it out.</p>
       </div>
     </div>
   );

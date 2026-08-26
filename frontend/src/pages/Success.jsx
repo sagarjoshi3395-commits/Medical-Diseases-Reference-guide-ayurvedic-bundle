@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Download, Home, Mail } from "lucide-react";
 import { Logo } from "../components/site/Logo";
 import { API } from "../lib/api";
+import { SUPPORT_EMAIL } from "../lib/siteContent";
 import axios from "axios";
 
 export default function Success() {
@@ -33,6 +34,8 @@ export default function Success() {
           )}
           <p className="mt-4 text-xs text-slateink">Keep this page bookmarked. For educational reference only — not a prescription. No dosage guidance.</p>
         </div>
+
+        <p className="mt-6 max-w-md text-sm text-slateink">Didn't receive your guides or facing any issue? Email <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-teal">{SUPPORT_EMAIL}</a>{info?.order_id ? ` with your order ID (${info.order_id})` : ""} and we'll help you right away.</p>
 
         <Link to="/" className="btn-ghost mt-8"><Home className="h-4 w-4" /> Back to Home</Link>
       </div>

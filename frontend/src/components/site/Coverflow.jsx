@@ -10,15 +10,15 @@ export const Coverflow = ({ items, onOpen, testid = "coverflow" }) => {
 
   useEffect(() => {
     const measure = () => {
-      const w = ref.current?.offsetWidth || 800;
-      setCardW(Math.max(190, Math.min(300, w * 0.42)));
+      const w = ref.current?.offsetWidth || 900;
+      setCardW(Math.max(240, Math.min(420, w * 0.52)));
     };
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  const cardH = cardW * 1.4;
+  const cardH = cardW * 1.36;
   const go = (dir) => setActive((a) => Math.min(items.length - 1, Math.max(0, a + dir)));
 
   const onTouchStart = (e) => { touch.current = { x: e.touches[0].clientX, active: true }; };

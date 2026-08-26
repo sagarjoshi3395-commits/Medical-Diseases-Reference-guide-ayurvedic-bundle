@@ -2,6 +2,7 @@
 // Educational / reference positioning only. No diagnosis / prescription / outcome claims.
 
 export const BRAND = "Medical Reference Guide";
+export const SUPPORT_EMAIL = "ledgerkitsupport@gmail.com";
 export const DEFAULT_PRICE = 290; // overridden by /api/config
 export const CURRENCY = "INR";
 
@@ -66,12 +67,16 @@ export const MEDICINE_SECTIONS = [
 ];
 
 export const DISEASE_CATEGORIES = [
-  { icon: "Stethoscope", name: "Common Clinical Presentations", topics: ["Abdominal Pain", "Toothache", "Headache", "Fever", "Cough", "Chest Pain", "Back Pain", "Joint Pain", "Dizziness", "Nausea & Vomiting"] },
-  { icon: "Soup", name: "Digestive & Gastrointestinal", topics: ["Indigestion", "Constipation", "Diarrhoea", "Gastroenteritis", "Peptic Ulcer Disease", "Gallstones", "Appendicitis", "Haemorrhoids"] },
-  { icon: "Wind", name: "Respiratory", topics: ["Common Cold", "Influenza", "Asthma", "Bronchitis", "Pneumonia", "Allergic Rhinitis"] },
-  { icon: "Sparkles", name: "Skin & Allergy", topics: ["Acne", "Eczema", "Urticaria", "Fungal Skin Infections", "Contact Dermatitis"] },
-  { icon: "Bone", name: "Musculoskeletal", topics: ["Muscle Strain", "Sprain", "Osteoarthritis", "Low Back Pain", "Neck Pain"] },
+  { icon: "Stethoscope", name: "Common Clinical Presentations", topics: ["Abdominal Pain", "Toothache", "Headache", "Fever", "Cough", "Chest Pain", "Back Pain", "Joint Pain", "Dizziness", "Nausea & Vomiting", "Fatigue & Weakness", "Breathlessness"] },
+  { icon: "Soup", name: "Digestive & Gastrointestinal", topics: ["Indigestion", "Constipation", "Diarrhoea", "Gastroenteritis", "Peptic Ulcer Disease", "Gallstones", "Appendicitis", "Haemorrhoids", "Acid Reflux (GERD)"] },
+  { icon: "Wind", name: "Respiratory", topics: ["Common Cold", "Influenza", "Asthma", "Bronchitis", "Pneumonia", "Allergic Rhinitis", "Sinusitis", "Sore Throat"] },
+  { icon: "HeartPulse", name: "Cardiovascular", topics: ["Hypertension", "Chest Pain (Angina overview)", "Palpitations", "Edema / Swelling", "High Cholesterol"] },
+  { icon: "Sparkles", name: "Skin & Allergy", topics: ["Acne", "Eczema", "Urticaria", "Fungal Skin Infections", "Contact Dermatitis", "Ringworm"] },
+  { icon: "Bone", name: "Musculoskeletal", topics: ["Muscle Strain", "Sprain", "Osteoarthritis", "Low Back Pain", "Neck Pain", "Gout"] },
   { icon: "Droplets", name: "Urinary & Renal", topics: ["Urinary Tract Infection", "Kidney Stones", "Common Urinary Symptoms"] },
+  { icon: "Activity", name: "Metabolic & Endocrine", topics: ["Diabetes (overview)", "Thyroid Disorders (overview)", "Anaemia", "Vitamin Deficiency"] },
+  { icon: "Brain", name: "Neurological & Mental Health", topics: ["Migraine", "Vertigo", "Insomnia", "Anxiety (overview)", "Stress-related symptoms"] },
+  { icon: "Eye", name: "Eye, Ear & Throat", topics: ["Conjunctivitis", "Ear Pain / Infection", "Tonsillitis", "Mouth Ulcers"] },
 ];
 
 export const MEDICINE_CATEGORIES = [
@@ -159,12 +164,12 @@ export const POLICIES = {
     ],
   },
   contact: {
-    title: "Contact",
+    title: "Contact & Support",
     updated: "We're happy to help",
     body: [
-      ["Support", "For questions about your purchase, access issues or general enquiries, reach out and we'll respond as soon as we can."],
-      ["Email", "Please add your support email in the site settings."],
-      ["Response time", "We aim to respond to genuine support requests within a reasonable time."],
+      ["Didn't receive your product?", "If your payment succeeded but you did not receive access to the guides, email us with your payment reference (Razorpay Payment ID) and the name/email used at checkout, and we'll restore your access as quickly as possible."],
+      ["Support email", "ledgerkitsupport@gmail.com — for order, access, download or general support queries."],
+      ["Response time", "We aim to respond to genuine support requests within a reasonable time (usually within 24–48 hours)."],
     ],
   },
   disclaimer: {

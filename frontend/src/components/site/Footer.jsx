@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Mail } from "lucide-react";
 import { Logo } from "./Logo";
+import { SUPPORT_EMAIL } from "../../lib/siteContent";
 
 export const Footer = () => {
   const cols = [
@@ -13,6 +15,9 @@ export const Footer = () => {
         <div>
           <Link to="/" className="flex items-center gap-2.5"><Logo /><span className="font-display text-lg font-extrabold text-white">Medical Reference Guide</span></Link>
           <p className="mt-4 max-w-sm text-sm leading-relaxed">An illustrated digital reference bundle covering disease and medicine topics in a structured, quick-revision format.</p>
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:border-teal/50 hover:text-teal">
+            <Mail className="h-4 w-4 text-teal" /> {SUPPORT_EMAIL}
+          </a>
         </div>
         {cols.map((c) => (
           <div key={c.h}>
@@ -27,6 +32,7 @@ export const Footer = () => {
       </div>
       <div className="border-t border-white/10">
         <div className="container-x space-y-3 py-7 text-xs leading-relaxed text-white/55">
+          <p><span className="font-semibold text-white/80">Didn't receive your product or need help?</span> Email <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-teal">{SUPPORT_EMAIL}</a> with your payment reference and we'll restore your access.</p>
           <p>For educational and general awareness purposes only. Not medical advice, diagnosis, treatment or a prescription. Always consult an appropriately qualified healthcare professional for medical concerns.</p>
           <p>Unauthorised reproduction, redistribution or resale of original guide content is prohibited subject to applicable law.</p>
           <p className="text-white/40">© 2026 Medical Reference Guide. All rights reserved.</p>
