@@ -68,6 +68,12 @@ A landing/sales site that sells an illustrated **Medical Reference Guide Bundle*
 - **[Feb 2026]** Sales ticker toast + "N people bought in last hour" pill.
 - **[Feb 2026]** Resend confirmation email with both PDF download links, HTML template.
 
+## Restored (Jul 2025)
+- Reopened from GitHub. `.env` files were gitignored (not in repo) so recreated: backend `.env` (MONGO_URL, DB_NAME, product/pricing config) + frontend `.env` (REACT_APP_BACKEND_URL).
+- Removed unused template deps (`emergentintegrations`, `litellm`) from requirements.txt that caused a pip resolution conflict — app does not use any LLM.
+- Both PDFs present in `backend/assets`. Services running; `/api/config` verified.
+- **Razorpay & Resend keys are EMPTY** after restore → payment is gated (create-order/verify return 503) and email is disabled until keys are re-supplied.
+
 ## Backlog (Prioritized)
 ### P1
 - **Verify Resend domain** — swap sandbox sender for `noreply@yourdomain.com` to reach all customers.

@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BASE_URL = "https://health-db-2.preview.emergentagent.com/api"
+BASE_URL = "https://med-guide-31.preview.emergentagent.com/api"
 
 class Colors:
     GREEN = '\033[92m'
