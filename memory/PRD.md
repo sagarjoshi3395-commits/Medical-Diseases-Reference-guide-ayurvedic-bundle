@@ -93,3 +93,5 @@ A landing/sales site that sells an illustrated **Medical Reference Guide Bundle*
 - Razorpay is in LIVE mode (`rzp_live_TUCuv0iBVyB6fT`).
 - Resend sender is `support@ledgerkit.in` — domain verified in Resend (Hostinger DNS). Emails deliver to all inboxes.
 - Success page clears `mrg_countdown_start` on load.
+- [Jun 2026] Fixed iOS Safari auto-zoom on checkout: BuyModal inputs changed from `text-sm` (14px) to `text-base` (16px) to stop focus auto-zoom (which made the Razorpay Pay button hard to tap). Also normalize phone to `91XXXXXXXXXX` for Razorpay prefill. Verified via testing_agent (iteration_1.json).
+- Razorpay checkout showing limited payment methods (only PayTM/wallet, no UPI apps/Cards) is a DASHBOARD/account setting, NOT a code issue. User must enable UPI, Cards, Netbanking under Razorpay Dashboard → Account & Settings → Payment Methods (and ensure account is fully activated for LIVE).

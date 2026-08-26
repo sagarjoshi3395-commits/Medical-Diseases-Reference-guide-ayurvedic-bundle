@@ -17,6 +17,13 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
   const { expired } = useCountdown(config?.countdown_seconds ?? 600);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const normalizePhone = (raw) => {
+    const digits = (raw || "").replace(/\D/g, "");
+    if (digits.length === 10) return `91${digits}`;
+    if (digits.length === 12 && digits.startsWith("91")) return digits;
+    return digits;
+  };
   const discountPrice = config?.price ?? 299;
   const regularPrice = config?.regular_price ?? 1999;
   const currentPrice = expired ? regularPrice : discountPrice;
@@ -53,7 +60,7 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
         name: data.product,
         description: "Digital PDF reference bundle · Educational use only",
         order_id: data.razorpay_order_id,
-        prefill: { name: form.name, email: form.email, contact: form.phone },
+        prefill: { name: form.name, email: form.email, contact: normalizePhone(form.phone) },
         theme: { color: "#0E9AA7" },
         handler: async (res) => {
           try {
@@ -132,7 +139,8 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
                   <div key={f.k}>
                     <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-slateink">{f.label}</label>
                     <input data-testid={`buy-input-${f.k}`} type={f.type} value={form[f.k]} onChange={set(f.k)} placeholder={f.ph}
-                      className="mt-1.5 w-full rounded-xl border border-line bg-mist px-4 py-3 text-sm text-ink outline-none transition-colors placeholder:text-slateink/50 focus:border-teal focus:bg-white" />
+                      inputMode={f.k === "phone" ? "tel" : f.k === "email" ? "email" : "text"}
+                      className="mt-1.5 w-full rounded-xl border border-line bg-mist px-4 py-3 text-base text-ink outline-none transition-colors placeholder:text-slateink/50 focus:border-teal focus:bg-white" />
                   </div>
                 ))}
                 <button type="submit" disabled={loading} data-testid="buy-submit-button" className="btn-primary w-full">

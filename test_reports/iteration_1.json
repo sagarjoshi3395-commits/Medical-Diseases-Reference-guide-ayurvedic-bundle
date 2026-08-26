@@ -1,0 +1,27 @@
+{
+  "summary": "Frontend-only verification of the iOS auto-zoom checkout bug fix in BuyModal. Verified on desktop (1920x1080) and mobile viewport (390x844) against REACT_APP_BACKEND_URL. All 4 requested scenarios PASS: (1) CTA opens buy-dialog (nav-buy/hero-buy/pricing-buy/sticky-buy all present), (2) all three inputs render, accept typed text, and have computed font-size = 16px (buy-input-email specifically = 16px, confirming the text-base fix; iOS Safari auto-zoom will not trigger), (3) submit with valid data POSTs /api/payment/create-order -> HTTP 200, Razorpay checkout script loads (window.Razorpay true), .razorpay-container overlay + api.razorpay.com iframe rendered with correct amount 299 and prefilled email (payment intentionally NOT completed - LIVE keys), (4) empty submit shows the 'Please fill in your name, email and phone.' toast. Zero JS page errors originated from the app; all console errors came from inside Razorpay's own third-party iframe (localhost fingerprint pixel ERR_CONNECTION_REFUSED, 'Refused to get unsafe header', accelerometer permissions-policy) - these are expected in a headless/sandboxed browser and are not app defects.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Buy modal (390x844 mobile)", "issues": ["No layout problems found: inputs are 48px tall, 16px font, dialog 377px wide with no horizontal overflow (docScrollW = 390), submit button fully within viewport (bottom 629 of 844). Viewport meta is 'width=device-width, initial-scale=1' with no maximum-scale/user-scalable lock, which is the correct accessible approach given the 16px input fix."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional (minor UX, not a bug): Razorpay's checkout still shows its own 'Contact details / Enter mobile number' step even though prefill.contact was passed as '+919876543210' (email prefilled correctly). Consider passing the phone as a bare 10-digit number or '91XXXXXXXXXX' so Razorpay accepts the prefill and skips one extra tap on mobile."
+  ],
+  "critical_code_review_comments": [
+    "BuyModal.payNow catches all errors into a single generic toast; the axios error body from /api/payment/create-order is discarded, making live-key failures hard to diagnose. Consider logging/surfacing err.response?.data?.detail.",
+    "Phone validation only checks length >= 6; no format normalization before sending to Razorpay prefill (see action item)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (per request)", "frontend": "100% (4/4 scenarios)"},
+  "seed_data_creation": "None. Used throwaway form data (Test QA User / qa.test@example.com / +919876543210). One Razorpay order was created via /api/payment/create-order but no payment was attempted or completed.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": false,
+  "test_credentials": "Not required; /app/memory not present in this fork.",
+  "context_for_next_testing_agent": "Buy CTA testids: nav-buy, hero-buy, pricing-buy, sticky-buy. Modal: buy-dialog, buy-input-name/email/phone, buy-submit-button. /api/config returns razorpay_enabled true (LIVE key) so the modal is in pay mode - never complete a payment. Razorpay iframe emits many harmless console errors in headless chromium; filter them out when asserting on console errors.",
+  "rca_of_the_issue": "Original bug: inputs used Tailwind text-sm (14px); iOS Safari auto-zooms any focused input with font-size < 16px, leaving the page zoomed when the Razorpay sheet opened so the Pay button was hard to tap. Fix (text-base = 16px on the input className in BuyModal.jsx line ~136) is verified in the running build - computed font-size is exactly 16px for all three inputs on both desktop and mobile viewports, so auto-zoom will no longer be triggered."
+}
