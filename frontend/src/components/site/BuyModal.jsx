@@ -6,15 +6,20 @@ import { toast } from "sonner";
 import { Loader2, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
 import { API, loadRazorpayScript } from "../../lib/api";
+import { getSessionStartedAt, useCountdown } from "../../lib/countdown";
+import { CountdownBadge } from "./CountdownBadge";
 
 export const BuyModal = ({ open, onOpenChange, config }) => {
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
   const [reserved, setReserved] = useState(false);
   const navigate = useNavigate();
+  const { expired } = useCountdown(config?.countdown_seconds ?? 600);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const price = config?.price ?? 299;
+  const discountPrice = config?.price ?? 299;
+  const regularPrice = config?.regular_price ?? 1999;
+  const currentPrice = expired ? regularPrice : discountPrice;
   const enabled = !!config?.razorpay_enabled;
 
   const valid = () => {
@@ -37,7 +42,10 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
     try {
       const ok = await loadRazorpayScript();
       if (!ok) { toast.error("Could not load payment. Check your connection."); setLoading(false); return; }
-      const { data } = await axios.post(`${API}/payment/create-order`, form);
+      const { data } = await axios.post(`${API}/payment/create-order`, {
+        ...form,
+        session_started_at: getSessionStartedAt(),
+      });
       const options = {
         key: data.key_id,
         amount: data.amount,
@@ -104,9 +112,21 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
               <DialogHeader>
                 <DialogTitle className="font-display text-2xl font-extrabold text-navy">Get the Reference Bundle</DialogTitle>
                 <DialogDescription className="text-slateink">
-                  Disease Guide + Medicine Guide · Digital PDFs. Total: <span className="font-bold text-teal">₹{price}</span> · one-time.
+                  Disease Guide + Medicine Guide · Digital PDFs. Total:{" "}
+                  {expired ? (
+                    <span className="font-bold text-teal">₹{regularPrice}</span>
+                  ) : (
+                    <>
+                      <span className="mr-1.5 text-slateink/60 line-through">₹{regularPrice}</span>
+                      <span className="font-bold text-teal">₹{discountPrice}</span>
+                    </>
+                  )}{" "}
+                  · one-time.
                 </DialogDescription>
               </DialogHeader>
+              <div className="mt-3">
+                <CountdownBadge variant="banner" />
+              </div>
               <form onSubmit={enabled ? payNow : reserve} className="mt-4 space-y-3.5">
                 {[{ k: "name", label: "Full name", ph: "e.g. Ananya Rao", type: "text" }, { k: "email", label: "Email", ph: "you@example.com", type: "email" }, { k: "phone", label: "Phone", ph: "+91 98765 43210", type: "tel" }].map((f) => (
                   <div key={f.k}>
@@ -116,7 +136,7 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
                   </div>
                 ))}
                 <button type="submit" disabled={loading} data-testid="buy-submit-button" className="btn-primary w-full">
-                  {loading ? (<><Loader2 className="h-5 w-5 animate-spin" /> Please wait…</>) : enabled ? (<>Pay Securely · ₹{price}</>) : (<>Reserve My Copy</>)}
+                  {loading ? (<><Loader2 className="h-5 w-5 animate-spin" /> Please wait…</>) : enabled ? (<>Pay Securely · ₹{currentPrice}</>) : (<>Reserve My Copy</>)}
                 </button>
                 <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-slateink">
                   {enabled ? (<><Lock className="h-3 w-3" /> Secure checkout via Razorpay · server-verified</>) : (<><ShieldCheck className="h-3 w-3" /> Secure Razorpay checkout — activating shortly</>)}

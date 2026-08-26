@@ -3,6 +3,8 @@ import { Check, ArrowRight, ChevronDown, BookOpenCheck, Languages, TriangleAlert
 import { Reveal, Eyebrow } from "./ui";
 import { HERO_CHIPS, COVERS } from "../../lib/siteContent";
 import { useBuy } from "./BuyContext";
+import { useCountdown } from "../../lib/countdown";
+import { CountdownBadge } from "./CountdownBadge";
 
 const STATS = [
   { icon: Layers, n: "140+", l: "Topics" },
@@ -13,7 +15,10 @@ const STATS = [
 
 export const Hero = () => {
   const { openBuy, config } = useBuy();
-  const price = config?.price ?? 290;
+  const discountPrice = config?.price ?? 299;
+  const regularPrice = config?.regular_price ?? 1999;
+  const { expired } = useCountdown(config?.countdown_seconds ?? 600);
+  const price = expired ? regularPrice : discountPrice;
 
   return (
     <section className="relative overflow-hidden">
@@ -58,7 +63,10 @@ export const Hero = () => {
               </button>
               <a href="#samples" className="btn-ghost">View Sample Pages <ChevronDown className="h-4 w-4" /></a>
             </div>
-            <p className="mt-4 text-[13px] text-slateink">Digital educational content • Not a prescription • No dosage guidance</p>
+            <div className="mt-4">
+              <CountdownBadge variant="pill" />
+            </div>
+            <p className="mt-3 text-[13px] text-slateink">Digital educational content • Not a prescription • No dosage guidance</p>
           </Reveal>
 
           <Reveal delay={0.25}>
@@ -93,7 +101,12 @@ export const Hero = () => {
             {/* price tag */}
             <div className="absolute -bottom-2 right-0 z-30 rounded-xl border border-line bg-white px-4 py-2 shadow-card">
               <div className="text-[11px] font-bold uppercase tracking-widest text-teal">One-time · Digital</div>
-              <div className="font-display text-xl font-extrabold text-navy">₹{price}</div>
+              <div className="flex items-baseline gap-1.5">
+                {!expired && (
+                  <span className="font-display text-sm font-bold text-slateink/60 line-through">₹{regularPrice}</span>
+                )}
+                <span className="font-display text-xl font-extrabold text-navy">₹{price}</span>
+              </div>
             </div>
           </div>
         </Reveal>

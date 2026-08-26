@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Download, Home, Mail } from "lucide-react";
+import { CheckCircle2, Download, Home, Mail, BookOpen, Pill } from "lucide-react";
 import { Logo } from "../components/site/Logo";
 import { API } from "../lib/api";
 import { SUPPORT_EMAIL } from "../lib/siteContent";
@@ -11,10 +11,13 @@ export default function Success() {
   const order = params.get("order");
   const token = params.get("token");
   const [info, setInfo] = useState(null);
-  const downloadUrl = order && token ? `${API}/download/${order}?token=${token}` : null;
+  const buildUrl = (fileKey) =>
+    order && token ? `${API}/download/${order}?token=${token}&file=${fileKey}` : null;
 
   useEffect(() => {
     if (order) axios.get(`${API}/order/${order}`).then((r) => setInfo(r.data)).catch(() => {});
+    // Clear the flash-sale countdown after a successful purchase.
+    try { localStorage.removeItem("mrg_countdown_start"); } catch (e) {}
   }, [order]);
 
   return (
@@ -28,9 +31,18 @@ export default function Success() {
         <div className="card-soft mt-8 w-full max-w-md p-7 text-left">
           <h2 className="font-display text-lg font-extrabold text-navy">Your Downloads</h2>
           {info && !info.pdf_available ? (
-            <p className="mt-3 flex items-start gap-2 rounded-xl bg-sky-50 px-4 py-3 text-sm text-sky-800"><Mail className="mt-0.5 h-4 w-4 shrink-0" />Your payment is confirmed. The guide file is being finalized — we'll email your download link to your registered email shortly.</p>
+            <p className="mt-3 flex items-start gap-2 rounded-xl bg-sky-50 px-4 py-3 text-sm text-sky-800"><Mail className="mt-0.5 h-4 w-4 shrink-0" />Your payment is confirmed. The guide files are being finalized — we'll email your download links to your registered email shortly.</p>
           ) : (
-            <a href={downloadUrl} target="_blank" rel="noreferrer" className="btn-primary mt-4 w-full" data-testid="download-btn"><Download className="h-5 w-5" /> Download the Guides (PDF)</a>
+            <div className="mt-4 space-y-3">
+              <a href={buildUrl("disease")} target="_blank" rel="noreferrer" className="btn-primary w-full" data-testid="download-disease-btn">
+                <BookOpen className="h-5 w-5" /> Disease Reference Guide (PDF)
+                <Download className="h-4 w-4" />
+              </a>
+              <a href={buildUrl("medicine")} target="_blank" rel="noreferrer" className="btn-primary w-full" data-testid="download-medicine-btn">
+                <Pill className="h-5 w-5" /> Medicine Reference Guide (PDF)
+                <Download className="h-4 w-4" />
+              </a>
+            </div>
           )}
           <p className="mt-4 text-xs text-slateink">Keep this page bookmarked. For educational reference only — not a prescription. No dosage guidance.</p>
         </div>
