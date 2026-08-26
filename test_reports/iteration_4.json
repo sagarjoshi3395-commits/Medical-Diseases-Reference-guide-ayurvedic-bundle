@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only verification of the Radix-dialog vs Razorpay-overlay pointer-events fix in BuyModal.payNow(). Desktop (1920x1080) and Mobile (390x844) both PASS all critical assertions. Desktop via nav-buy: empty submit still shows 'Please fill in your name, email and phone.' toast and buy-dialog stays open (count=1); buy-input-email computed font-size = 16px; on modal open the Razorpay checkout.js script tag is present plus 3 razorpay preconnect/dns-prefetch links. After filling valid data and clicking buy-submit-button: POST /api/payment/create-order returned 200 with price=290, amount=29000, key_id=rzp_live_TUVls2qF6KwGuv, flash_sale_applied=true; ~1.5-4s later buy-dialog count=0 (our Radix dialog fully removed from DOM) while .razorpay-container=1 and 1 api.razorpay.com iframe is mounted. Pointer-events diagnostics with the overlay open: body pointer-events='auto', html='auto', body aria-hidden=null, data-scroll-locked=null, 0 [data-radix-focus-guard] elements, 0 open Radix dialog/overlay nodes, 0 body children with pointer-events:none, .razorpay-container pointer-events='auto' and full-viewport rect; document.elementFromPoint at the container centre resolves to IFRAME.razorpay-checkout-frame (inside .razorpay-container), i.e. NO leftover Radix overlay/lock intercepting taps. Mobile (390x844) via hero-buy: buy-dialog was already removed at ~600ms (before the 300ms-delayed rzp.open() sheet finished mounting), overlay opened showing Total Amount 290, same clean diagnostics (body auto, guards 0, blocked 0, hit=IFRAME.razorpay-checkout-frame), and a SINGLE tap on the Razorpay contact input focused it and typing '9876543210' registered on the first attempt - the reported 'must tap 6-7 times' symptom did not reproduce. No real payment was completed on either run (stopped at the checkout sheet).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "BuyModal / normalizePhone", "issue": "Razorpay prefill.contact is sent as '919876543210' (no + prefix), which Razorpay rejects - the checkout 'Mobile number' field renders EMPTY on both desktop and mobile, so the user must retype their phone inside Razorpay even though they just entered it in our form. Suggest returning '+91' + 10 digits (or the bare 10 digits) from normalizePhone.", "selector": "[data-testid=\"buy-input-phone\"] -> options.prefill.contact", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Mobile 390x844 navbar", "issues": ["data-testid=\"sticky-buy\" lives inside the collapsed mobile nav menu, so it is not clickable/visible on mobile until the hamburger is opened (Playwright click timed out on it). If a persistent sticky mobile CTA is intended, it is missing at 390px; otherwise the testid name 'sticky-buy' is misleading."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_pricing.py", "/app/backend/tests/backend_test.py"],
+  "action_items": [
+    "Fix phone prefill: normalizePhone should produce '+91XXXXXXXXXX' (or plain 10 digits) so Razorpay pre-populates the mobile number instead of showing an empty field.",
+    "Clarify/implement the mobile sticky CTA - 'sticky-buy' is currently only reachable inside the collapsed hamburger menu at 390px."
+  ],
+  "critical_code_review_comments": [
+    "payNow() now calls onOpenChange(false) directly instead of reset(false); reset() also clears the form/reserved state after 300ms. Because Dialog's onOpenChange={reset} is not invoked here, the name/email/phone values persist after the dialog closes - harmless today (they are needed if the user re-opens after dismissing Razorpay) but be aware the two close paths diverge.",
+    "If the user dismisses the Razorpay sheet, modal.ondismiss only calls setLoading(false); our dialog stays closed, so the user must re-click a CTA to retry. Consider re-opening the modal (onOpenChange(true)) on dismiss for a smoother retry, keeping the created order re-usable.",
+    "The 300ms setTimeout before rzp.open() is a magic number tied to the Radix close animation; if the dialog animation duration changes, the lock could briefly overlap again. Consider opening Razorpay from the dialog's exit-animation-complete callback instead."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (frontend-only request)", "frontend": "100% of critical assertions passed (2 minor non-blocking issues)"},
+  "seed_data_creation": "2 additional unpaid Razorpay LIVE orders created by the UI runs (test_qa_ui4@example.com, test_qa_ui5@example.com). No payments completed.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "None required (no auth in this app).",
+  "context_for_next_testing_agent": "Radix/Razorpay pointer-events conflict is verified FIXED on desktop and mobile: after clicking buy-submit-button the buy-dialog is removed from the DOM (count=0) and the .razorpay-container is hit-testable (elementFromPoint -> IFRAME.razorpay-checkout-frame, body pointer-events auto, 0 focus guards). Use hero-buy or nav-buy on mobile (sticky-buy is hidden inside the hamburger at 390px). Wait ~1.5s+ after Pay for the 300ms-delayed rzp.open(). Every Pay click creates a real unpaid LIVE order - keep runs minimal and never complete payment. Remaining open item: Razorpay mobile-number prefill is empty due to '91XXXXXXXXXX' format.",
+  "rca_of_the_issue": "Original defect: BuyModal rendered a Radix Dialog with modal=true, which sets pointer-events:none on document.body and installs [data-radix-focus-guard] focus traps around everything outside the dialog. Razorpay's checkout sheet mounts at document.body, i.e. outside the dialog, so its buttons received the pointer-events lock / lost focus and swallowed taps until a stray event slipped through (the 6-7 tap symptom). The applied fix closes the Radix dialog (onOpenChange(false)) and defers rzp.open() by 300ms so Radix has fully unmounted and removed the lock/guards before the Razorpay overlay appears. Verified empirically: with the overlay open there are 0 focus guards, no pointer-events:none on body or any body child, and elementFromPoint at the overlay centre resolves to the Razorpay iframe, with a single tap registering on the first attempt."
+}

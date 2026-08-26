@@ -85,15 +85,18 @@ A landing/sales site that sells an illustrated **Medical Reference Guide Bundle*
 - **Analytics funnel** — visit → lead → paid.
 
 ## Integrations
-- **Razorpay** (LIVE) — `rzp_live_TUCuv0iBVyB6fT` in `/app/backend/.env`
+- **Razorpay** (LIVE) — `rzp_live_TUVls2qF6KwGuv` in `/app/backend/.env` (rotated Jun 2026; old key `rzp_live_TUCuv0iBVyB6fT` retired)
 - **Resend** — key active, sender `support@ledgerkit.in` (domain verified, Hostinger DNS)
 
 ## Critical Notes for Future Agents
 - `.env` files are gitignored — do NOT delete.
-- Razorpay is in LIVE mode (`rzp_live_TUCuv0iBVyB6fT`).
+- Razorpay is in LIVE mode (`rzp_live_TUVls2qF6KwGuv`). Backend runs `order.create` via `asyncio.to_thread` (non-blocking).
 - Resend sender is `support@ledgerkit.in` — domain verified in Resend (Hostinger DNS). Emails deliver to all inboxes.
 - Success page clears `mrg_countdown_start` on load.
 - [Jun 2026] Fixed iOS Safari auto-zoom on checkout: BuyModal inputs changed from `text-sm` (14px) to `text-base` (16px) to stop focus auto-zoom (which made the Razorpay Pay button hard to tap). Also normalize phone to `91XXXXXXXXXX` for Razorpay prefill. Verified via testing_agent (iteration_1.json).
 - Razorpay checkout showing limited payment methods (only PayTM/wallet, no UPI apps/Cards) is a DASHBOARD/account setting, NOT a code issue. User must enable UPI, Cards, Netbanking under Razorpay Dashboard → Account & Settings → Payment Methods (and ensure account is fully activated for LIVE).
 - [Jun 2026] Fixed slow Razorpay checkout load: script `checkout.js` is now warmed up on modal open (useEffect) instead of only after Pay click; `loadRazorpayScript()` + create-order POST run in parallel (Promise.all); added preconnect/dns-prefetch to checkout.razorpay.com & api.razorpay.com in index.html; loadRazorpayScript de-dups script tags. Verified via testing_agent (iteration_2.json) — script present ~200ms after modal open, Pay→overlay ~887ms.
 - [Jun 2026] Pricing is now FLAT ₹290 always (PRODUCT_PRICE=290). The countdown timer is URGENCY ONLY — it no longer reverts the price to ₹1999 on expiry. Backend `create_order` charges `PRODUCT_PRICE` unconditionally (countdown only sets the `flash_sale_applied` analytics flag). All frontend components (Hero, Navbar/AnnouncementBar/StickyCta, Pricing, BuyModal, CountdownBadge) derive price from `config.price` and always show ₹290 with ₹1999 struck through. Verified via testing_agent (iteration_3.json, 11/11 backend + full frontend incl. expired-timer case).
+- [Jun 2026] **ROOT CAUSE of "must tap Pay/More Options 6-7 times" FIXED**: BuyModal is a Radix Dialog (modal=true) which sets `pointer-events:none` on document.body + installs focus guards on everything OUTSIDE the dialog. Razorpay's checkout sheet mounts at document.body (outside the dialog), so its buttons were swallowing taps. Fix in `BuyModal.payNow()`: close our dialog (`onOpenChange(false)`) then open Razorpay 300ms later (`setTimeout(()=>rzp.open(),300)`) so Radix fully unmounts the lock/guards first. Verified via testing_agent (iteration_4.json): with overlay open → 0 focus guards, body pointer-events=auto, elementFromPoint at overlay centre = Razorpay iframe, single tap registers first try.
+- [Jun 2026] Razorpay `order.create` moved off the event loop via `asyncio.to_thread` (non-blocking backend). Phone prefill format fixed to `+91XXXXXXXXXX` so Razorpay pre-populates the mobile field (was `91...` which Razorpay rejected → empty field forced retype).
+- ⚠️ DEPLOYMENT: production env vars are managed SEPARATELY from repo `.env`. Redeploy alone does NOT propagate `.env` changes (PRODUCT_PRICE, RAZORPAY keys). User must update env vars in the deployment settings UI (Home → app → settings → Environment Variables) then redeploy. Verify live build via `https://ledgerkit.in/api/config` (should show price 290 + new key_id).

@@ -25,9 +25,10 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
 
   const normalizePhone = (raw) => {
     const digits = (raw || "").replace(/\D/g, "");
-    if (digits.length === 10) return `91${digits}`;
-    if (digits.length === 12 && digits.startsWith("91")) return digits;
-    return digits;
+    if (digits.length === 10) return `+91${digits}`;
+    if (digits.length === 11 && digits.startsWith("0")) return `+91${digits.slice(1)}`;
+    if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
+    return digits ? `+${digits}` : "";
   };
   const discountPrice = config?.price ?? 290;
   const regularPrice = config?.regular_price ?? 1999;
@@ -91,7 +92,14 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
       };
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", () => { reset(false); navigate("/failed?reason=payment"); });
-      rzp.open();
+      // Close our Radix dialog BEFORE opening Razorpay. A modal Radix dialog locks
+      // pointer-events and traps focus on everything outside it; Razorpay's sheet is
+      // rendered at document.body (outside our dialog), so that conflict was blocking
+      // taps on the Pay / More Options buttons (needing many taps). Closing first
+      // frees the Razorpay overlay to receive taps normally.
+      onOpenChange(false);
+      setLoading(false);
+      setTimeout(() => rzp.open(), 300);
     } catch (err) {
       toast.error("Something went wrong starting checkout. Please try again.");
       setLoading(false);
