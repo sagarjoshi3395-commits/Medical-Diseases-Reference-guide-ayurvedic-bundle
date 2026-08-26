@@ -25,7 +25,7 @@ class TestHealth:
     def test_root(self, api_client):
         r = api_client.get(f"{BASE_URL}/api/", timeout=30)
         assert r.status_code == 200
-        assert r.json().get("message") == "Hello World"
+        assert r.json().get("message") == "Medical Reference Guide API"
 
 
 # Feature: POST /api/leads

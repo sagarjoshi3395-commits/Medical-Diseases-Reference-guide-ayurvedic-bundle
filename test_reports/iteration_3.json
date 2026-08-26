@@ -1,0 +1,23 @@
+{
+  "summary": "Verified the flat ₹290 pricing requirement (countdown = urgency only) across backend and frontend. Backend: 11/11 new pricing tests pass — GET /api/config returns price 290/regular 1999/countdown 600; POST /api/payment/create-order returns price=290, amount=29000 for expired session_started_at (-20 min), null session, active session, and garbage timestamp; validation (422) and guards (404 verify unknown order, 404 unknown order, 403 download unpaid) all correct. Frontend (public URL, 1920x1080): fresh visit shows ₹290 in announcement bar ('Limited-time price: ₹290 ₹1999'), nav-buy 'Get Access · ₹290', hero tag ₹1999→₹290, pricing-current-price ₹290, live countdown 09:59. After simulating expiry via localStorage mrg_countdown_start = now-20min + reload: pricing-current-price=₹290, nav-buy 'Get Access · ₹290', pricing-buy 'Grab it at ₹290', sticky-buy '...· ₹290', hero badge 'Selling fast · ₹290'; no live timer (urgency copy 'Selling fast — grab yours now' remains); ₹1999 appears only as strikethrough. Checkout in the expired state: modal shows 'Total: ₹1999₹290', submit 'Pay Securely · ₹290', create-order returned 200 with price 290 / amount 29000, Razorpay overlay opened (Price Summary 290) — stopped before payment. Regression: buy-input-email font-size = 16px; Razorpay checkout.js + preconnect links present on modal open.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_pricing.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pricing_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "create_order still computes countdown_active only for the flash_sale_applied analytics flag — correct and price-independent; no change needed.",
+    "Frontend price is read from config with hardcoded fallback 290/1999 in 5 components; consider a single shared constant/hook to avoid drift if the price changes again."
+  ],
+  "updated_files": ["/app/backend/tests/test_pricing.py", "/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "4 unpaid Razorpay LIVE orders created by create-order tests (email test_qa_buyer@example.com) + 1 from UI test (test_qa_ui@example.com). No payments completed. Also earlier TEST_ leads remain in db.leads.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": false,
+  "test_credentials": "None required; /app/memory/test_credentials.md not needed for this app (no auth).",
+  "context_for_next_testing_agent": "Fixed stale assertion in backend_test.py TestHealth::test_root (expected 'Hello World' → 'Medical Reference Guide API'). New pricing suite at /app/backend/tests/test_pricing.py; each create-order call hits LIVE Razorpay and creates a real unpaid order — keep the count low. Simulate countdown expiry with page.evaluate setting localStorage 'mrg_countdown_start' to a past ISO timestamp then reload.",
+  "rca_of_the_issue": "N/A — the reported ₹1999 reversion after countdown expiry is fixed: backend uses effective_price = PRODUCT_PRICE unconditionally and all frontend components derive price from config.price rather than the `expired` flag."
+}

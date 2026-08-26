@@ -2,16 +2,14 @@ import React from "react";
 import { Check, ArrowRight, ShieldCheck } from "lucide-react";
 import { Reveal, SectionHead } from "./ui";
 import { useBuy } from "./BuyContext";
-import { useCountdown } from "../../lib/countdown";
 import { CountdownBadge } from "./CountdownBadge";
 import { RecentSalesPill } from "./SalesTicker";
 
 export const Pricing = () => {
   const { openBuy, config } = useBuy();
-  const discountPrice = config?.price ?? 299;
+  const discountPrice = config?.price ?? 290;
   const regularPrice = config?.regular_price ?? 1999;
-  const { expired } = useCountdown(config?.countdown_seconds ?? 600);
-  const currentPrice = expired ? regularPrice : discountPrice;
+  const currentPrice = discountPrice;
   const includes = [
     "Illustrated Disease Reference Guide (PDF)",
     "Illustrated Medicine Reference Guide (PDF)",
@@ -28,16 +26,12 @@ export const Pricing = () => {
           <div className="bg-gradient-to-br from-navy to-tealdark px-8 py-8 text-center text-white">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">Complete Bundle • Digital</p>
             <div className="mt-3 flex items-end justify-center gap-2">
-              {!expired && (
-                <span className="pb-2 font-display text-2xl font-bold text-white/50 line-through">₹{regularPrice}</span>
-              )}
+              <span className="pb-2 font-display text-2xl font-bold text-white/50 line-through">₹{regularPrice}</span>
               <span data-testid="pricing-current-price" className="font-display text-5xl font-extrabold">₹{currentPrice}</span>
             </div>
-            {!expired && (
-              <p className="mt-1 text-xs font-bold uppercase tracking-widest text-amber-300">
-                Save ₹{regularPrice - discountPrice} · Flash Sale
-              </p>
-            )}
+            <p className="mt-1 text-xs font-bold uppercase tracking-widest text-amber-300">
+              Save ₹{regularPrice - discountPrice} · Limited-time price
+            </p>
             <p className="mt-1 text-sm text-white/70">One-time purchase</p>
             <div className="mt-4 flex justify-center">
               <CountdownBadge variant="banner" className="w-full max-w-xs" />
@@ -53,7 +47,7 @@ export const Pricing = () => {
               ))}
             </ul>
             <button onClick={openBuy} data-testid="pricing-buy" className="btn-primary mt-7 w-full text-lg">
-              {expired ? `Buy at ₹${regularPrice}` : `Grab it at ₹${discountPrice}`} <ArrowRight className="h-5 w-5" />
+              Grab it at ₹{discountPrice} <ArrowRight className="h-5 w-5" />
             </button>
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] text-slateink"><ShieldCheck className="h-3.5 w-3.5 text-teal" /> One-time purchase • Digital product • Educational reference only</p>
           </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Timer, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import { useCountdown } from "../../lib/countdown";
 import { useBuy } from "./BuyContext";
 
@@ -17,14 +17,14 @@ export const CountdownBadge = ({ variant = "pill", className = "" }) => {
         data-testid="countdown-banner"
         className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold ${
           expired
-            ? "bg-slateink/10 text-slateink"
+            ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md"
             : "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md"
         } ${className}`}
       >
         {expired ? (
           <>
-            <Timer className="h-4 w-4" />
-            <span>Flash sale ended · Regular price applies</span>
+            <Flame className="h-4 w-4" />
+            <span>Limited-time price · selling fast</span>
           </>
         ) : (
           <>
@@ -47,14 +47,14 @@ export const CountdownBadge = ({ variant = "pill", className = "" }) => {
       data-testid="countdown-pill"
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
         expired
-          ? "bg-slateink/10 text-slateink"
+          ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300"
           : "bg-orange-100 text-orange-700 ring-1 ring-orange-300"
       } ${className}`}
     >
       {expired ? (
         <>
-          <Timer className="h-3.5 w-3.5" />
-          Offer ended
+          <Flame className="h-3.5 w-3.5" />
+          Selling fast · ₹{config?.price ?? 290}
         </>
       ) : (
         <>
@@ -62,7 +62,7 @@ export const CountdownBadge = ({ variant = "pill", className = "" }) => {
           <span className="font-mono tabular-nums">
             {mm}:{ss}
           </span>{" "}
-          left at ₹{config?.price ?? 299}
+          left at ₹{config?.price ?? 290}
         </>
       )}
     </span>

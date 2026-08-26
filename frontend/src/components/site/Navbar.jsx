@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, BookOpenText, Flame } from "lucide-react";
+import { Menu, X, Flame } from "lucide-react";
 import { Logo } from "./Logo";
 import { NAV_LINKS, BRAND } from "../../lib/siteContent";
 import { useBuy } from "./BuyContext";
@@ -10,28 +10,23 @@ import { CountdownBadge } from "./CountdownBadge";
 export const AnnouncementBar = () => {
   const { config } = useBuy();
   const { mm, ss, expired } = useCountdown(config?.countdown_seconds ?? 600);
-  const discount = config?.price ?? 299;
+  const discount = config?.price ?? 290;
   const regular = config?.regular_price ?? 1999;
   return (
-    <div className={`w-full ${expired ? "bg-navy" : "bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500"} text-white`}>
+    <div className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 text-white">
       <div className="container-x flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-2 text-center text-[12px] font-medium tracking-wide sm:text-[13px]">
+        <Flame className="h-4 w-4 shrink-0 animate-pulse" />
+        <span className="font-bold">
+          Limited-time price: ₹{discount}{" "}
+          <span className="font-normal text-white/80 line-through">₹{regular}</span>
+        </span>
+        <span className="hidden sm:inline text-white/80">·</span>
         {expired ? (
-          <>
-            <BookOpenText className="h-4 w-4 shrink-0 text-teal" />
-            <span>Digital Medical Reference Guide • Illustrated PDFs • <span className="text-white/70">Educational Use Only</span></span>
-          </>
+          <span className="font-semibold text-white/90">Selling fast — grab yours now</span>
         ) : (
-          <>
-            <Flame className="h-4 w-4 shrink-0 animate-pulse" />
-            <span className="font-bold">
-              Flash Sale: ₹{discount}{" "}
-              <span className="font-normal text-white/80 line-through">₹{regular}</span>
-            </span>
-            <span className="hidden sm:inline text-white/80">·</span>
-            <span className="font-mono font-bold tabular-nums" data-testid="announcement-timer">
-              Ends in {mm}:{ss}
-            </span>
-          </>
+          <span className="font-mono font-bold tabular-nums" data-testid="announcement-timer">
+            Ends in {mm}:{ss}
+          </span>
         )}
       </div>
     </div>
@@ -47,8 +42,7 @@ export const Navbar = () => {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  const { expired } = useCountdown(config?.countdown_seconds ?? 600);
-  const price = expired ? (config?.regular_price ?? 1999) : (config?.price ?? 299);
+  const price = config?.price ?? 290;
 
   return (
     <>
@@ -90,7 +84,7 @@ export const StickyCta = () => {
   const { openBuy, config } = useBuy();
   const [show, setShow] = useState(false);
   const { expired, mm, ss } = useCountdown(config?.countdown_seconds ?? 600);
-  const price = expired ? (config?.regular_price ?? 1999) : (config?.price ?? 299);
+  const price = config?.price ?? 290;
   useEffect(() => {
     const onScroll = () => setShow(window.scrollY > 700);
     window.addEventListener("scroll", onScroll);

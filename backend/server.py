@@ -163,8 +163,9 @@ async def create_order(input: OrderCreate):
     if not RAZORPAY_ENABLED:
         raise HTTPException(status_code=503, detail="Payment is not configured yet.")
 
-    # Determine effective price based on countdown status
-    effective_price = PRODUCT_PRICE_REGULAR
+    # Price is always the flat price. The countdown only drives on-page urgency;
+    # it never changes what the buyer actually pays.
+    effective_price = PRODUCT_PRICE
     countdown_active = False
     if input.session_started_at:
         try:
@@ -172,9 +173,7 @@ async def create_order(input: OrderCreate):
             if started.tzinfo is None:
                 started = started.replace(tzinfo=timezone.utc)
             elapsed = (datetime.now(timezone.utc) - started).total_seconds()
-            if 0 <= elapsed <= COUNTDOWN_SECONDS:
-                effective_price = PRODUCT_PRICE
-                countdown_active = True
+            countdown_active = 0 <= elapsed <= COUNTDOWN_SECONDS
         except Exception:
             pass
 

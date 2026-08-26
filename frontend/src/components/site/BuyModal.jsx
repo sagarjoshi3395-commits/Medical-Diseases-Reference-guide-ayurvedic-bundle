@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Loader2, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
 import { API, loadRazorpayScript } from "../../lib/api";
-import { getSessionStartedAt, useCountdown } from "../../lib/countdown";
+import { getSessionStartedAt } from "../../lib/countdown";
 import { CountdownBadge } from "./CountdownBadge";
 
 export const BuyModal = ({ open, onOpenChange, config }) => {
@@ -14,7 +14,6 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
   const [loading, setLoading] = useState(false);
   const [reserved, setReserved] = useState(false);
   const navigate = useNavigate();
-  const { expired } = useCountdown(config?.countdown_seconds ?? 600);
 
   // Warm up the Razorpay checkout script as soon as the modal opens so it is
   // already cached by the time the user taps Pay (removes the load delay).
@@ -30,9 +29,9 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
     if (digits.length === 12 && digits.startsWith("91")) return digits;
     return digits;
   };
-  const discountPrice = config?.price ?? 299;
+  const discountPrice = config?.price ?? 290;
   const regularPrice = config?.regular_price ?? 1999;
-  const currentPrice = expired ? regularPrice : discountPrice;
+  const currentPrice = discountPrice;
   const enabled = !!config?.razorpay_enabled;
 
   const valid = () => {
@@ -130,14 +129,8 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
                 <DialogTitle className="font-display text-2xl font-extrabold text-navy">Get the Reference Bundle</DialogTitle>
                 <DialogDescription className="text-slateink">
                   Disease Guide + Medicine Guide · Digital PDFs. Total:{" "}
-                  {expired ? (
-                    <span className="font-bold text-teal">₹{regularPrice}</span>
-                  ) : (
-                    <>
-                      <span className="mr-1.5 text-slateink/60 line-through">₹{regularPrice}</span>
-                      <span className="font-bold text-teal">₹{discountPrice}</span>
-                    </>
-                  )}{" "}
+                  <span className="mr-1.5 text-slateink/60 line-through">₹{regularPrice}</span>
+                  <span className="font-bold text-teal">₹{discountPrice}</span>{" "}
                   · one-time.
                 </DialogDescription>
               </DialogHeader>
