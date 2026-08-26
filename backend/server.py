@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
+import asyncio
 
 import razorpay
 
@@ -181,13 +182,16 @@ async def create_order(input: OrderCreate):
     order_uuid = str(uuid.uuid4())
     receipt = f"mrg_{order_uuid[:8]}"  # <= 40 chars
     try:
-        rp_order = razor_client.order.create({
-            "amount": amount_paise,
-            "currency": CURRENCY,
-            "receipt": receipt,
-            "payment_capture": 1,
-            "notes": {"product": PRODUCT_NAME, "email": input.email},
-        })
+        rp_order = await asyncio.to_thread(
+            razor_client.order.create,
+            {
+                "amount": amount_paise,
+                "currency": CURRENCY,
+                "receipt": receipt,
+                "payment_capture": 1,
+                "notes": {"product": PRODUCT_NAME, "email": input.email},
+            },
+        )
     except Exception as e:
         logger.error(f"Razorpay order creation failed: {e}")
         raise HTTPException(status_code=502, detail="Could not create payment order.")
