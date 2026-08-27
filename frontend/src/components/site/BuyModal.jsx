@@ -63,6 +63,7 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
       ]);
       if (!ok) { toast.error("Could not load payment. Check your connection."); setLoading(false); return; }
       const { data } = orderRes;
+      try { window.fbq && window.fbq("track", "InitiateCheckout", { value: (data.amount || 29000) / 100, currency: data.currency || "INR" }); } catch (e) {}
       const options = {
         key: data.key_id,
         amount: data.amount,
@@ -112,6 +113,7 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
     setLoading(true);
     try {
       await axios.post(`${API}/leads`, { ...form, source: "landing_buy" });
+      try { window.fbq && window.fbq("track", "Lead"); } catch (e) {}
       setReserved(true);
     } catch (err) {
       toast.error("Something went wrong. Please try again.");

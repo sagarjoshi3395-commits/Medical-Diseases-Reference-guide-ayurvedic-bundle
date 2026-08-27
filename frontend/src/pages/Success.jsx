@@ -18,6 +18,14 @@ export default function Success() {
     if (order) axios.get(`${API}/order/${order}`).then((r) => setInfo(r.data)).catch(() => {});
     // Clear the flash-sale countdown after a successful purchase.
     try { localStorage.removeItem("mrg_countdown_start"); } catch (e) {}
+    // Fire Meta Pixel Purchase once per order (dedup via sessionStorage).
+    try {
+      const key = `fb_purchase_${order}`;
+      if (order && window.fbq && !sessionStorage.getItem(key)) {
+        window.fbq("track", "Purchase", { value: 290, currency: "INR" });
+        sessionStorage.setItem(key, "1");
+      }
+    } catch (e) {}
   }, [order]);
 
   return (
