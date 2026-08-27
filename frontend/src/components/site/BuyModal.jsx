@@ -18,7 +18,10 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
   // Warm up the Razorpay checkout script as soon as the modal opens so it is
   // already cached by the time the user taps Pay (removes the load delay).
   useEffect(() => {
-    if (open) loadRazorpayScript();
+    if (open) {
+      loadRazorpayScript();
+      try { window.fbq && window.fbq("track", "AddToCart", { value: config?.price ?? 290, currency: config?.currency ?? "INR" }); } catch (e) {}
+    }
   }, [open]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
