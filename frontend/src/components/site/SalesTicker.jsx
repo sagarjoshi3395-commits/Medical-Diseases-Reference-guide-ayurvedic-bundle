@@ -78,7 +78,7 @@ export const SalesTicker = () => {
   if (dismissed) return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-4 left-4 z-40 max-w-[calc(100vw-2rem)] sm:bottom-6 sm:left-6">
+    <div className="pointer-events-none fixed bottom-28 left-4 z-40 max-w-[calc(100vw-2rem)] sm:bottom-6 sm:left-6">
       <AnimatePresence mode="wait">
         {entry && (
           <motion.div
