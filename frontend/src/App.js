@@ -6,6 +6,7 @@ import { BuyProvider } from "./components/site/BuyContext";
 import { Landing } from "./components/site/Landing";
 import Success from "./pages/Success";
 import Failed from "./pages/Failed";
+import Paid from "./pages/Paid";
 import Policy from "./pages/Policy";
 
 function ScrollManager() {
@@ -61,6 +62,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/success" element={<Success />} />
+            <Route path="/paid" element={<Paid />} />
             <Route path="/failed" element={<Failed />} />
             <Route path="/:type" element={<Policy />} />
           </Routes>

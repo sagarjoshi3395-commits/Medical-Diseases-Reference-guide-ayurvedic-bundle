@@ -3,20 +3,44 @@
 ## Original Problem Statement
 Restore the Medical Reference Guide GitHub project and iteratively apply changes requested by the user.
 
-## Current State
-- Full-stack app (React + FastAPI + MongoDB) restored from GitHub and running.
-- Landing page fully functional.
-- **Payments**: Razorpay integration is bypassed. All "Buy / Get Access / Get the Complete Guide" CTAs now open an external SuperProfile checkout in a new tab: `https://superprofile.bio/vp/6a9efd48ce71d100135003dc`.
-  - Change applied in `/app/frontend/src/components/site/BuyContext.jsx` (constant `CHECKOUT_URL`).
-  - `BuyModal.jsx` is no longer mounted (kept in repo but unused).
-- Emails via Resend still disabled (empty API key).
+## Current State — Payment via SuperProfile
+Razorpay is bypassed. Checkout runs through SuperProfile hosted checkout while the rest of the flow (download page, Resend email, Meta Pixel) works exactly like before.
+
+### Flow
+1. Visitor clicks any Buy CTA → `BuyModal` opens (name / email / phone).
+2. Submit → `POST /api/checkout/superprofile-init` creates a pending order + `download_token`, returns SuperProfile URL.
+3. Frontend stores `{order_id, download_token}` in `localStorage['mrg_pending_order']`, fires `fbq('InitiateCheckout')`, and redirects to `https://superprofile.bio/vp/6a9efd48ce71d100135003dc`.
+4. **SuperProfile "Thank You URL" must be configured to `https://<site>/paid`.**
+5. `/paid` page (`src/pages/Paid.jsx`) reads the pending order from `localStorage`, calls `POST /api/checkout/superprofile-complete` → backend marks order paid, sends Resend confirmation email with PDF download links, then redirects to `/success?order=…&token=…`.
+6. `/success` page shows the two PDF download buttons and fires `fbq('Purchase')`.
+
+### Meta Pixel
+ID `3470309736541129` is unchanged in `frontend/public/index.html`. `PageView`, `InitiateCheckout`, and `Purchase` events all still fire.
+
+### Backend endpoints (new)
+- `POST /api/checkout/superprofile-init` — create pending order.
+- `POST /api/checkout/superprofile-complete` — mark paid + trigger email.
+- `GET /api/config` — now also returns `checkout_provider` and `superprofile_url`.
+- `GET /api/download/{order_id}` — unchanged; requires `status=paid` + valid token.
+
+### Config knobs
+- `SUPERPROFILE_CHECKOUT_URL` in `/app/backend/.env` (optional override; defaults to the URL the user provided).
+- `PUBLIC_BASE_URL` refreshed to `https://health-guide-52.preview.emergentagent.com` so email download links are absolute and correct.
+- `RESEND_API_KEY` still blank → emails fail silently (needs user key to activate).
 
 ## Files of Reference
-- `/app/frontend/src/components/site/BuyContext.jsx` — provides `openBuy()` which redirects to external checkout.
-- `/app/frontend/src/components/site/BuyModal.jsx` — currently unused.
-- `/app/frontend/.env`, `/app/backend/.env` — recreated locally (gitignored).
+- `/app/backend/server.py` — new SuperProfile endpoints, config additions.
+- `/app/backend/.env` — SuperProfile + Public base URL config.
+- `/app/frontend/src/components/site/BuyContext.jsx` — restores modal + exposes `CHECKOUT_URL`.
+- `/app/frontend/src/components/site/BuyModal.jsx` — rewritten for SuperProfile init + redirect.
+- `/app/frontend/src/pages/Paid.jsx` — new landing page that finalizes the order after SuperProfile.
+- `/app/frontend/src/App.js` — `/paid` route added.
 
-## Backlog / Next Ideas (P2)
-- Track outbound checkout clicks via analytics (fbq InitiateCheckout already fires before redirect).
-- Optional: replace text "Secure checkout via Razorpay" microcopy anywhere it still surfaces.
-- Re-enable Razorpay when keys are available (revert `openBuy` to open BuyModal).
+## Verified (Sept 2026)
+- Init → complete → success flow via Playwright + curl.
+- `/api/download/*` returns the PDF (200, application/pdf) after order is paid.
+
+## Backlog
+- **P1**: Add `RESEND_API_KEY` in backend `.env` to activate purchase emails.
+- **P2**: SuperProfile webhook (if available) for server-verified completion instead of trusting the browser return.
+- **P2**: Track outbound checkout clicks / drop-offs in analytics.

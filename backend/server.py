@@ -92,6 +92,17 @@ class PaymentVerify(BaseModel):
     razorpay_signature: str
 
 
+class SuperProfileComplete(BaseModel):
+    order_id: str
+
+
+# SuperProfile hosted checkout URL (Razorpay temporarily bypassed)
+SUPERPROFILE_CHECKOUT_URL = os.environ.get(
+    'SUPERPROFILE_CHECKOUT_URL',
+    'https://superprofile.bio/vp/6a9efd48ce71d100135003dc',
+).strip()
+
+
 # ---------------- Routes ----------------
 @api_router.get("/")
 async def root():
@@ -108,6 +119,8 @@ async def get_config():
         "currency": CURRENCY,
         "razorpay_enabled": RAZORPAY_ENABLED,
         "key_id": RAZORPAY_KEY_ID if RAZORPAY_ENABLED else "",
+        "checkout_provider": "superprofile",
+        "superprofile_url": SUPERPROFILE_CHECKOUT_URL,
     }
 
 
@@ -283,6 +296,81 @@ async def verify_payment(input: PaymentVerify):
         "download_token": download_token,
         "name": order.get("name"),
         "email": order.get("email"),
+    }
+
+
+@api_router.post("/checkout/superprofile-init")
+async def superprofile_init(input: OrderCreate):
+    """Collect buyer info, create a pending order + download token, return SuperProfile checkout URL."""
+    order_uuid = str(uuid.uuid4())
+    download_token = str(uuid.uuid4())
+    doc = {
+        "id": order_uuid,
+        "provider": "superprofile",
+        "amount": PRODUCT_PRICE * 100,
+        "currency": CURRENCY,
+        "name": input.name,
+        "email": input.email,
+        "phone": input.phone,
+        "status": "pending_superprofile",
+        "download_token": download_token,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.orders.insert_one(doc)
+    return {
+        "order_id": order_uuid,
+        "download_token": download_token,
+        "checkout_url": SUPERPROFILE_CHECKOUT_URL,
+        "product": PRODUCT_NAME,
+        "price": PRODUCT_PRICE,
+        "currency": CURRENCY,
+    }
+
+
+@api_router.post("/checkout/superprofile-complete")
+async def superprofile_complete(input: SuperProfileComplete):
+    """Called from the /paid landing page after buyer returns from SuperProfile.
+    Marks the pending order as paid and dispatches the Resend confirmation email."""
+    order = await db.orders.find_one({"id": input.order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found.")
+
+    already_paid = order.get("status") == "paid"
+    download_token = order.get("download_token") or str(uuid.uuid4())
+
+    if not already_paid:
+        await db.orders.update_one(
+            {"id": input.order_id},
+            {"$set": {
+                "status": "paid",
+                "download_token": download_token,
+                "paid_at": datetime.now(timezone.utc).isoformat(),
+            }},
+        )
+        try:
+            public_base = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
+            if not public_base:
+                public_base = os.environ.get('CORS_ORIGINS', '').split(',')[0].rstrip('/') or ''
+            api_base = f"{public_base}/api" if public_base and not public_base.endswith('/api') else (public_base or '/api')
+            disease_url = f"{api_base}/download/{order['id']}?token={download_token}&file=disease"
+            medicine_url = f"{api_base}/download/{order['id']}?token={download_token}&file=medicine"
+            await send_purchase_email(
+                to_email=order.get("email"),
+                name=order.get("name") or "",
+                order_id=order["id"],
+                disease_url=disease_url,
+                medicine_url=medicine_url,
+            )
+        except Exception as e:
+            logger.error(f"Post-payment email dispatch failed: {e}")
+
+    return {
+        "success": True,
+        "order_id": order["id"],
+        "download_token": download_token,
+        "name": order.get("name"),
+        "email": order.get("email"),
+        "already_paid": already_paid,
     }
 
 

@@ -1,42 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Loader2, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Loader2, Lock, CheckCircle2, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
-import { API, loadRazorpayScript } from "../../lib/api";
-import { getSessionStartedAt } from "../../lib/countdown";
+import { API } from "../../lib/api";
 import { CountdownBadge } from "./CountdownBadge";
+import { CHECKOUT_URL } from "./BuyContext";
+
+const PENDING_KEY = "mrg_pending_order";
 
 export const BuyModal = ({ open, onOpenChange, config }) => {
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
-  const [reserved, setReserved] = useState(false);
-  const navigate = useNavigate();
-
-  // Warm up the Razorpay checkout script as soon as the modal opens so it is
-  // already cached by the time the user taps Pay (removes the load delay).
-  useEffect(() => {
-    if (open) {
-      loadRazorpayScript();
-      try { window.fbq && window.fbq("track", "AddToCart", { value: config?.price ?? 290, currency: config?.currency ?? "INR" }); } catch (e) {}
-    }
-  }, [open]);
+  const [readyOrder, setReadyOrder] = useState(null);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const normalizePhone = (raw) => {
-    const digits = (raw || "").replace(/\D/g, "");
-    if (digits.length === 10) return `+91${digits}`;
-    if (digits.length === 11 && digits.startsWith("0")) return `+91${digits.slice(1)}`;
-    if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
-    return digits ? `+${digits}` : "";
-  };
   const discountPrice = config?.price ?? 290;
   const regularPrice = config?.regular_price ?? 1999;
-  const currentPrice = discountPrice;
-  const enabled = !!config?.razorpay_enabled;
+  const checkoutUrl = config?.superprofile_url || CHECKOUT_URL;
 
   const valid = () => {
     if (!form.name.trim() || !form.email.trim() || form.phone.trim().length < 6) {
@@ -48,79 +31,34 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
 
   const reset = (v) => {
     onOpenChange(v);
-    if (!v) setTimeout(() => { setReserved(false); setForm({ name: "", email: "", phone: "" }); }, 300);
+    if (!v) setTimeout(() => { setReadyOrder(null); setForm({ name: "", email: "", phone: "" }); }, 300);
   };
 
-  const payNow = async (e) => {
+  const startCheckout = async (e) => {
     e.preventDefault();
     if (!valid()) return;
     setLoading(true);
     try {
-      // Run script load and order creation in parallel to cut wait time.
-      const [ok, orderRes] = await Promise.all([
-        loadRazorpayScript(),
-        axios.post(`${API}/payment/create-order`, {
-          ...form,
-          session_started_at: getSessionStartedAt(),
-        }),
-      ]);
-      if (!ok) { toast.error("Could not load payment. Check your connection."); setLoading(false); return; }
-      const { data } = orderRes;
-      try { window.fbq && window.fbq("track", "InitiateCheckout", { value: (data.amount || 29000) / 100, currency: data.currency || "INR" }); } catch (e) {}
-      const options = {
-        key: data.key_id,
-        amount: data.amount,
-        currency: data.currency,
-        name: data.product,
-        description: "Digital PDF reference bundle · Educational use only",
-        order_id: data.razorpay_order_id,
-        prefill: { name: form.name, email: form.email, contact: normalizePhone(form.phone) },
-        theme: { color: "#0E9AA7" },
-        handler: async (res) => {
-          try {
-            const verify = await axios.post(`${API}/payment/verify`, {
-              razorpay_order_id: res.razorpay_order_id,
-              razorpay_payment_id: res.razorpay_payment_id,
-              razorpay_signature: res.razorpay_signature,
-            });
-            const d = verify.data;
-            sessionStorage.setItem("mrg_order", JSON.stringify(d));
-            reset(false);
-            navigate(`/success?order=${d.order_id}&token=${d.download_token}`);
-          } catch (err) {
-            reset(false);
-            navigate("/failed?reason=verify");
-          }
-        },
-        modal: { ondismiss: () => setLoading(false) },
+      const { data } = await axios.post(`${API}/checkout/superprofile-init`, form);
+      const pending = {
+        order_id: data.order_id,
+        download_token: data.download_token,
+        name: form.name,
+        email: form.email,
+        created_at: Date.now(),
       };
-      const rzp = new window.Razorpay(options);
-      rzp.on("payment.failed", () => { reset(false); navigate("/failed?reason=payment"); });
-      // Close our Radix dialog BEFORE opening Razorpay. A modal Radix dialog locks
-      // pointer-events and traps focus on everything outside it; Razorpay's sheet is
-      // rendered at document.body (outside our dialog), so that conflict was blocking
-      // taps on the Pay / More Options buttons (needing many taps). Closing first
-      // frees the Razorpay overlay to receive taps normally.
-      onOpenChange(false);
-      setLoading(false);
-      setTimeout(() => rzp.open(), 300);
+      try { localStorage.setItem(PENDING_KEY, JSON.stringify(pending)); } catch (e) {}
+      try {
+        window.fbq && window.fbq("track", "InitiateCheckout", {
+          value: data.price ?? discountPrice,
+          currency: data.currency ?? "INR",
+        });
+      } catch (e) {}
+      setReadyOrder(pending);
+      // Redirect current tab straight to SuperProfile checkout.
+      window.location.href = data.checkout_url || checkoutUrl;
     } catch (err) {
       toast.error("Something went wrong starting checkout. Please try again.");
-      setLoading(false);
-    }
-  };
-
-  const reserve = async (e) => {
-    e.preventDefault();
-    if (!valid()) return;
-    setLoading(true);
-    try {
-      await axios.post(`${API}/leads`, { ...form, source: "landing_buy" });
-      try { window.fbq && window.fbq("track", "Lead"); } catch (e) {}
-      setReserved(true);
-    } catch (err) {
-      toast.error("Something went wrong. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -129,12 +67,16 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
     <Dialog open={open} onOpenChange={reset}>
       <DialogContent className="max-w-md rounded-2xl border-line bg-white text-ink" data-testid="buy-dialog">
         <AnimatePresence mode="wait">
-          {reserved ? (
-            <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="py-3 text-center" data-testid="buy-reserved">
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-teal/12 text-teal"><CheckCircle2 className="h-8 w-8" /></div>
-              <h3 className="mt-4 font-display text-2xl font-extrabold text-navy">You’re on the list!</h3>
-              <p className="mt-2 text-sm text-slateink">Thanks {form.name.split(" ")[0]} — secure checkout is being finalized. We’ll email <span className="text-navy font-semibold">{form.email}</span> as soon as it’s live.</p>
-              <button onClick={() => reset(false)} className="btn-ghost mt-6 w-full">Done</button>
+          {readyOrder ? (
+            <motion.div key="redirecting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-3 text-center">
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-teal/12 text-teal">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+              <h3 className="mt-4 font-display text-2xl font-extrabold text-navy">Redirecting to secure checkout…</h3>
+              <p className="mt-2 text-sm text-slateink">If nothing happens in a few seconds, tap the button below.</p>
+              <a href={checkoutUrl} className="btn-primary mt-5 w-full" data-testid="buy-manual-redirect">
+                <ExternalLink className="h-4 w-4" /> Open Checkout
+              </a>
             </motion.div>
           ) : (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -150,7 +92,7 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
               <div className="mt-3">
                 <CountdownBadge variant="banner" />
               </div>
-              <form onSubmit={enabled ? payNow : reserve} className="mt-4 space-y-3.5">
+              <form onSubmit={startCheckout} className="mt-4 space-y-3.5">
                 {[{ k: "name", label: "Full name", ph: "e.g. Ananya Rao", type: "text" }, { k: "email", label: "Email", ph: "you@example.com", type: "email" }, { k: "phone", label: "Phone", ph: "+91 98765 43210", type: "tel" }].map((f) => (
                   <div key={f.k}>
                     <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-slateink">{f.label}</label>
@@ -160,10 +102,10 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
                   </div>
                 ))}
                 <button type="submit" disabled={loading} data-testid="buy-submit-button" className="btn-primary w-full">
-                  {loading ? (<><Loader2 className="h-5 w-5 animate-spin" /> Please wait…</>) : enabled ? (<>Pay Securely · ₹{currentPrice}</>) : (<>Reserve My Copy</>)}
+                  {loading ? (<><Loader2 className="h-5 w-5 animate-spin" /> Please wait…</>) : (<>Continue to Payment · ₹{discountPrice}</>)}
                 </button>
                 <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-slateink">
-                  {enabled ? (<><Lock className="h-3 w-3" /> Secure checkout via Razorpay · server-verified</>) : (<><ShieldCheck className="h-3 w-3" /> Secure Razorpay checkout — activating shortly</>)}
+                  <Lock className="h-3 w-3" /> Secure checkout — you’ll be redirected to complete payment
                 </p>
                 <p className="text-center text-[11px] text-slateink/70">Digital educational content · Not a prescription · No dosage guidance</p>
               </form>
@@ -174,3 +116,5 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
     </Dialog>
   );
 };
+
+BuyModal.PENDING_KEY = PENDING_KEY;
