@@ -7,11 +7,12 @@ import { SUPPORT_EMAIL } from "../../lib/siteContent";
 export const Footer = () => {
   const cols = [
     { h: "Explore", links: [["Home", "/"], ["What's Inside", "/#inside"], ["Samples", "/#samples"], ["Topics", "/#topics"], ["FAQ", "/#faq"]] },
-    { h: "Legal", links: [["Terms", "/terms"], ["Privacy Policy", "/privacy"], ["Refund Policy", "/refund"], ["Medical Disclaimer", "/disclaimer"], ["Contact", "/contact"]] },
+    { h: "Support", links: [["Resend my downloads", "/resend"], ["Contact", "/contact"]] },
+    { h: "Legal", links: [["Terms", "/terms"], ["Privacy Policy", "/privacy"], ["Refund Policy", "/refund"], ["Medical Disclaimer", "/disclaimer"]] },
   ];
   return (
     <footer className="bg-navydark text-white/70">
-      <div className="container-x grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="container-x grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Link to="/" className="flex items-center gap-2.5"><Logo /><span className="font-display text-lg font-extrabold text-white">Medical Reference Guide</span></Link>
           <p className="mt-4 max-w-sm text-sm leading-relaxed">An illustrated digital reference bundle covering disease and medicine topics in a structured, quick-revision format.</p>
@@ -32,7 +33,7 @@ export const Footer = () => {
       </div>
       <div className="border-t border-white/10">
         <div className="container-x space-y-3 py-7 text-xs leading-relaxed text-white/55">
-          <p><span className="font-semibold text-white/80">Didn't receive your product or need help?</span> Email <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-teal">{SUPPORT_EMAIL}</a> with your payment reference and we'll restore your access.</p>
+          <p><span className="font-semibold text-white/80">Didn't receive your product or need help?</span> Use the <Link to="/resend" className="font-semibold text-teal underline">Resend my downloads</Link> tool, or email <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-teal">{SUPPORT_EMAIL}</a> with your payment reference.</p>
           <p>For educational and general awareness purposes only. Not medical advice, diagnosis, treatment or a prescription. Always consult an appropriately qualified healthcare professional for medical concerns.</p>
           <p>Unauthorised reproduction, redistribution or resale of original guide content is prohibited subject to applicable law.</p>
           <p className="text-white/40">© 2026 Medical Reference Guide. All rights reserved.</p>

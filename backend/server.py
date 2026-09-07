@@ -98,6 +98,10 @@ class SuperProfileFulfill(BaseModel):
     phone: Optional[str] = ""
 
 
+class ResendDownloads(BaseModel):
+    email: EmailStr
+
+
 # SuperProfile hosted checkout URL (Razorpay temporarily bypassed)
 SUPERPROFILE_CHECKOUT_URL = os.environ.get(
     'SUPERPROFILE_CHECKOUT_URL',
@@ -301,17 +305,35 @@ async def verify_payment(input: PaymentVerify):
     }
 
 
-@api_router.post("/checkout/superprofile-fulfill")
-async def superprofile_fulfill(input: SuperProfileFulfill):
-    """Called from /paid after buyer returns from SuperProfile.
-    Creates a paid order for this email, generates a download token, and sends the Resend email.
-    If an order already exists for this email in the last hour, reuses it (idempotent-ish)."""
+def _api_base() -> str:
+    public_base = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
+    if not public_base:
+        public_base = os.environ.get('CORS_ORIGINS', '').split(',')[0].rstrip('/') or ''
+    return f"{public_base}/api" if public_base and not public_base.endswith('/api') else (public_base or '/api')
+
+
+async def _dispatch_purchase_email(*, order_id: str, download_token: str, email: str, name: str) -> None:
+    api_base = _api_base()
+    disease_url = f"{api_base}/download/{order_id}?token={download_token}&file=disease"
+    medicine_url = f"{api_base}/download/{order_id}?token={download_token}&file=medicine"
+    await send_purchase_email(
+        to_email=email,
+        name=name or "",
+        order_id=order_id,
+        disease_url=disease_url,
+        medicine_url=medicine_url,
+    )
+
+
+async def _fulfill_order(*, email: str, name: str = "", phone: str = "", provider: str = "superprofile", raw_webhook: Optional[dict] = None) -> dict:
+    """Create-or-reuse a paid order for this email and send the download email.
+    Reuses any paid order for the same email in the last hour to stay idempotent."""
     one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
     existing = await db.orders.find_one(
         {
-            "email": input.email,
+            "email": email,
             "status": "paid",
-            "provider": "superprofile",
+            "provider": provider,
             "paid_at": {"$gte": one_hour_ago.isoformat()},
         },
         {"_id": 0},
@@ -319,10 +341,9 @@ async def superprofile_fulfill(input: SuperProfileFulfill):
     )
     if existing and existing.get("download_token"):
         return {
-            "success": True,
             "order_id": existing["id"],
             "download_token": existing["download_token"],
-            "name": existing.get("name"),
+            "name": existing.get("name") or "",
             "email": existing.get("email"),
             "already_paid": True,
         }
@@ -332,44 +353,139 @@ async def superprofile_fulfill(input: SuperProfileFulfill):
     now_iso = datetime.now(timezone.utc).isoformat()
     doc = {
         "id": order_uuid,
-        "provider": "superprofile",
+        "provider": provider,
         "amount": PRODUCT_PRICE * 100,
         "currency": CURRENCY,
-        "name": input.name or "",
-        "email": input.email,
-        "phone": input.phone or "",
+        "name": name or "",
+        "email": email,
+        "phone": phone or "",
         "status": "paid",
         "download_token": download_token,
         "created_at": now_iso,
         "paid_at": now_iso,
     }
+    if raw_webhook is not None:
+        doc["webhook_payload"] = raw_webhook
     await db.orders.insert_one(doc)
 
     try:
-        public_base = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
-        if not public_base:
-            public_base = os.environ.get('CORS_ORIGINS', '').split(',')[0].rstrip('/') or ''
-        api_base = f"{public_base}/api" if public_base and not public_base.endswith('/api') else (public_base or '/api')
-        disease_url = f"{api_base}/download/{order_uuid}?token={download_token}&file=disease"
-        medicine_url = f"{api_base}/download/{order_uuid}?token={download_token}&file=medicine"
-        await send_purchase_email(
-            to_email=input.email,
-            name=input.name or "",
-            order_id=order_uuid,
-            disease_url=disease_url,
-            medicine_url=medicine_url,
-        )
+        await _dispatch_purchase_email(order_id=order_uuid, download_token=download_token, email=email, name=name)
     except Exception as e:
         logger.error(f"Post-payment email dispatch failed: {e}")
 
     return {
-        "success": True,
         "order_id": order_uuid,
         "download_token": download_token,
-        "name": input.name or "",
-        "email": input.email,
+        "name": name or "",
+        "email": email,
         "already_paid": False,
     }
+
+
+@api_router.post("/checkout/superprofile-fulfill")
+async def superprofile_fulfill(input: SuperProfileFulfill):
+    """Called from /paid after buyer returns from SuperProfile."""
+    result = await _fulfill_order(email=input.email, name=input.name or "", phone=input.phone or "")
+    return {"success": True, **result}
+
+
+# ---------- Cosmofeed webhook ----------
+def _pick(obj, *paths, default=""):
+    """Extract the first present value from a set of dotted paths in a nested dict."""
+    for path in paths:
+        cur = obj
+        ok = True
+        for part in path.split("."):
+            if isinstance(cur, dict) and part in cur:
+                cur = cur[part]
+            else:
+                ok = False
+                break
+        if ok and cur not in (None, ""):
+            return cur
+    return default
+
+
+COSMOFEED_SUCCESS_EVENTS = {
+    "payment.success", "payment_success", "payment.paid", "payment_paid",
+    "order.completed", "order_completed", "order.paid", "order_paid",
+    "sale.completed", "sale_completed", "purchase.completed", "purchase_completed",
+    "success", "completed", "paid",
+}
+
+
+@api_router.post("/webhooks/cosmofeed")
+async def cosmofeed_webhook(request: Request):
+    """Cosmofeed / SuperProfile payment webhook.
+    Accepts any JSON payload — extracts email/name/event from the most common paths.
+    Always returns 200 so Cosmofeed doesn't retry endlessly on unrelated events."""
+    raw_body = b""
+    payload = {}
+    try:
+        raw_body = await request.body()
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    # Optional shared-secret check via ?secret=... or X-Webhook-Secret header
+    configured_secret = os.environ.get('COSMOFEED_WEBHOOK_SECRET', '').strip()
+    if configured_secret:
+        provided = request.query_params.get('secret') or request.headers.get('x-webhook-secret') or ''
+        if provided != configured_secret:
+            logger.warning("Cosmofeed webhook rejected: bad secret")
+            return JSONResponse({"received": False, "reason": "bad_secret"}, status_code=401)
+
+    # Store every incoming webhook for debugging / audit.
+    try:
+        await db.webhook_events.insert_one({
+            "id": str(uuid.uuid4()),
+            "provider": "cosmofeed",
+            "received_at": datetime.now(timezone.utc).isoformat(),
+            "headers": dict(request.headers),
+            "payload": payload if payload else {"__raw__": raw_body.decode(errors="ignore")[:4000]},
+        })
+    except Exception as e:
+        logger.error(f"Failed to persist webhook event: {e}")
+
+    event = str(_pick(payload, "event", "type", "event_type", "data.event", "data.type", default="")).lower()
+    email = str(_pick(payload, "email", "data.email", "customer.email", "data.customer.email", "buyer.email", "data.buyer.email", "user.email", "data.user.email", default="")).strip()
+    name = str(_pick(payload, "name", "data.name", "customer.name", "data.customer.name", "buyer.name", "data.buyer.name", default="")).strip()
+    phone = str(_pick(payload, "phone", "data.phone", "customer.phone", "data.customer.phone", "buyer.phone", "data.buyer.phone", default="")).strip()
+
+    is_success = (not event) or any(ev in event for ev in COSMOFEED_SUCCESS_EVENTS)
+    if not is_success:
+        logger.info(f"Cosmofeed webhook ignored (event='{event}')")
+        return {"received": True, "processed": False, "reason": "event_not_success"}
+
+    if not email:
+        logger.warning(f"Cosmofeed webhook missing email; payload keys={list(payload.keys())[:10]}")
+        return {"received": True, "processed": False, "reason": "no_email"}
+
+    result = await _fulfill_order(email=email, name=name, phone=phone, provider="cosmofeed", raw_webhook=payload)
+    return {"received": True, "processed": True, **result}
+
+
+@api_router.post("/resend-downloads")
+async def resend_downloads(input: ResendDownloads):
+    """Self-service: find the buyer's most recent paid order and re-send the download email."""
+    order = await db.orders.find_one(
+        {"email": input.email, "status": "paid"},
+        {"_id": 0},
+        sort=[("paid_at", -1)],
+    )
+    if not order or not order.get("download_token"):
+        return {"success": False, "reason": "not_found"}
+    try:
+        await _dispatch_purchase_email(
+            order_id=order["id"],
+            download_token=order["download_token"],
+            email=order["email"],
+            name=order.get("name") or "",
+        )
+    except Exception as e:
+        logger.error(f"Resend downloads email failed: {e}")
+        raise HTTPException(status_code=502, detail="Failed to send email. Please try again.")
+    return {"success": True, "email": order["email"], "order_id": order["id"]}
 
 
 @api_router.get("/order/{order_id}")
