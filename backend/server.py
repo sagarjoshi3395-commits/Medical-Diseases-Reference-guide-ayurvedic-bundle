@@ -92,8 +92,10 @@ class PaymentVerify(BaseModel):
     razorpay_signature: str
 
 
-class SuperProfileComplete(BaseModel):
-    order_id: str
+class SuperProfileFulfill(BaseModel):
+    email: EmailStr
+    name: Optional[str] = ""
+    phone: Optional[str] = ""
 
 
 # SuperProfile hosted checkout URL (Razorpay temporarily bypassed)
@@ -299,78 +301,74 @@ async def verify_payment(input: PaymentVerify):
     }
 
 
-@api_router.post("/checkout/superprofile-init")
-async def superprofile_init(input: OrderCreate):
-    """Collect buyer info, create a pending order + download token, return SuperProfile checkout URL."""
+@api_router.post("/checkout/superprofile-fulfill")
+async def superprofile_fulfill(input: SuperProfileFulfill):
+    """Called from /paid after buyer returns from SuperProfile.
+    Creates a paid order for this email, generates a download token, and sends the Resend email.
+    If an order already exists for this email in the last hour, reuses it (idempotent-ish)."""
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+    existing = await db.orders.find_one(
+        {
+            "email": input.email,
+            "status": "paid",
+            "provider": "superprofile",
+            "paid_at": {"$gte": one_hour_ago.isoformat()},
+        },
+        {"_id": 0},
+        sort=[("paid_at", -1)],
+    )
+    if existing and existing.get("download_token"):
+        return {
+            "success": True,
+            "order_id": existing["id"],
+            "download_token": existing["download_token"],
+            "name": existing.get("name"),
+            "email": existing.get("email"),
+            "already_paid": True,
+        }
+
     order_uuid = str(uuid.uuid4())
     download_token = str(uuid.uuid4())
+    now_iso = datetime.now(timezone.utc).isoformat()
     doc = {
         "id": order_uuid,
         "provider": "superprofile",
         "amount": PRODUCT_PRICE * 100,
         "currency": CURRENCY,
-        "name": input.name,
+        "name": input.name or "",
         "email": input.email,
-        "phone": input.phone,
-        "status": "pending_superprofile",
+        "phone": input.phone or "",
+        "status": "paid",
         "download_token": download_token,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": now_iso,
+        "paid_at": now_iso,
     }
     await db.orders.insert_one(doc)
-    return {
-        "order_id": order_uuid,
-        "download_token": download_token,
-        "checkout_url": SUPERPROFILE_CHECKOUT_URL,
-        "product": PRODUCT_NAME,
-        "price": PRODUCT_PRICE,
-        "currency": CURRENCY,
-    }
 
-
-@api_router.post("/checkout/superprofile-complete")
-async def superprofile_complete(input: SuperProfileComplete):
-    """Called from the /paid landing page after buyer returns from SuperProfile.
-    Marks the pending order as paid and dispatches the Resend confirmation email."""
-    order = await db.orders.find_one({"id": input.order_id}, {"_id": 0})
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found.")
-
-    already_paid = order.get("status") == "paid"
-    download_token = order.get("download_token") or str(uuid.uuid4())
-
-    if not already_paid:
-        await db.orders.update_one(
-            {"id": input.order_id},
-            {"$set": {
-                "status": "paid",
-                "download_token": download_token,
-                "paid_at": datetime.now(timezone.utc).isoformat(),
-            }},
+    try:
+        public_base = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
+        if not public_base:
+            public_base = os.environ.get('CORS_ORIGINS', '').split(',')[0].rstrip('/') or ''
+        api_base = f"{public_base}/api" if public_base and not public_base.endswith('/api') else (public_base or '/api')
+        disease_url = f"{api_base}/download/{order_uuid}?token={download_token}&file=disease"
+        medicine_url = f"{api_base}/download/{order_uuid}?token={download_token}&file=medicine"
+        await send_purchase_email(
+            to_email=input.email,
+            name=input.name or "",
+            order_id=order_uuid,
+            disease_url=disease_url,
+            medicine_url=medicine_url,
         )
-        try:
-            public_base = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
-            if not public_base:
-                public_base = os.environ.get('CORS_ORIGINS', '').split(',')[0].rstrip('/') or ''
-            api_base = f"{public_base}/api" if public_base and not public_base.endswith('/api') else (public_base or '/api')
-            disease_url = f"{api_base}/download/{order['id']}?token={download_token}&file=disease"
-            medicine_url = f"{api_base}/download/{order['id']}?token={download_token}&file=medicine"
-            await send_purchase_email(
-                to_email=order.get("email"),
-                name=order.get("name") or "",
-                order_id=order["id"],
-                disease_url=disease_url,
-                medicine_url=medicine_url,
-            )
-        except Exception as e:
-            logger.error(f"Post-payment email dispatch failed: {e}")
+    except Exception as e:
+        logger.error(f"Post-payment email dispatch failed: {e}")
 
     return {
         "success": True,
-        "order_id": order["id"],
+        "order_id": order_uuid,
         "download_token": download_token,
-        "name": order.get("name"),
-        "email": order.get("email"),
-        "already_paid": already_paid,
+        "name": input.name or "",
+        "email": input.email,
+        "already_paid": False,
     }
 
 
