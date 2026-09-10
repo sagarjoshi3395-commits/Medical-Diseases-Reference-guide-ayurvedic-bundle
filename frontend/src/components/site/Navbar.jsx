@@ -10,7 +10,7 @@ import { CountdownBadge } from "./CountdownBadge";
 export const AnnouncementBar = () => {
   const { config } = useBuy();
   const { mm, ss, expired } = useCountdown(config?.countdown_seconds ?? 600);
-  const discount = config?.price ?? 290;
+  const discount = config?.price ?? 199;
   const regular = config?.regular_price ?? 1999;
   return (
     <div className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 text-white">
@@ -42,7 +42,7 @@ export const Navbar = () => {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  const price = config?.price ?? 290;
+  const price = config?.price ?? 199;
 
   return (
     <>
@@ -84,7 +84,7 @@ export const StickyCta = () => {
   const { openBuy, config } = useBuy();
   const [show, setShow] = useState(false);
   const { expired, mm, ss } = useCountdown(config?.countdown_seconds ?? 600);
-  const price = config?.price ?? 290;
+  const price = config?.price ?? 199;
   useEffect(() => {
     const onScroll = () => setShow(window.scrollY > 700);
     window.addEventListener("scroll", onScroll);

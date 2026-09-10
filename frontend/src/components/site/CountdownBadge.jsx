@@ -54,7 +54,7 @@ export const CountdownBadge = ({ variant = "pill", className = "" }) => {
       {expired ? (
         <>
           <Flame className="h-3.5 w-3.5" />
-          Selling fast · ₹{config?.price ?? 290}
+          Selling fast · ₹{config?.price ?? 199}
         </>
       ) : (
         <>
@@ -62,7 +62,7 @@ export const CountdownBadge = ({ variant = "pill", className = "" }) => {
           <span className="font-mono tabular-nums">
             {mm}:{ss}
           </span>{" "}
-          left at ₹{config?.price ?? 290}
+          left at ₹{config?.price ?? 199}
         </>
       )}
     </span>

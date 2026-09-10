@@ -17,7 +17,7 @@ export const BuyModal = ({ open, onOpenChange, config }) => {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const discountPrice = config?.price ?? 290;
+  const discountPrice = config?.price ?? 199;
   const regularPrice = config?.regular_price ?? 1999;
   const checkoutUrl = config?.superprofile_url || CHECKOUT_URL;
 

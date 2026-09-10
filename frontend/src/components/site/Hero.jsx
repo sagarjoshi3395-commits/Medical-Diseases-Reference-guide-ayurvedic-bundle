@@ -14,7 +14,7 @@ const STATS = [
 
 export const Hero = () => {
   const { openBuy, config } = useBuy();
-  const discountPrice = config?.price ?? 290;
+  const discountPrice = config?.price ?? 199;
   const regularPrice = config?.regular_price ?? 1999;
   const price = discountPrice;
 

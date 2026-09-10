@@ -384,7 +384,7 @@ export const FinalCta = () => {
           <h2 className="mx-auto mt-5 max-w-2xl font-display text-4xl font-extrabold leading-tight text-white sm:text-5xl">Make Medical Revision More Visual.</h2>
           <p className="mx-auto mt-4 max-w-xl text-[15px] text-white/70">Explore disease and medicine topics through colourful reference pages designed to make information easier to browse and review.</p>
           <button onClick={openBuy} className="btn-primary mt-8">Get the Medical Reference Guide <ArrowRight className="h-5 w-5" /></button>
-          <p className="mt-4 text-sm text-white/60">Disease Guide + Medicine Guide • Digital PDFs • ₹{config?.price ?? 290}</p>
+          <p className="mt-4 text-sm text-white/60">Disease Guide + Medicine Guide • Digital PDFs • ₹{config?.price ?? 199}</p>
         </Reveal>
       </div>
     </section>

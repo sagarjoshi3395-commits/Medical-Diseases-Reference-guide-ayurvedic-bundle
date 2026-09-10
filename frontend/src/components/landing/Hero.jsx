@@ -76,7 +76,7 @@ export const Hero = ({ onBuy }) => {
             {[
               ["2,000+", "Medicines"],
               ["200+", "Pages"],
-              ["₹290", "One-time"],
+              ["₹199", "One-time"],
             ].map(([n, l]) => (
               <div key={l}>
                 <div className="font-mono text-xl font-bold text-ink">{n}</div>

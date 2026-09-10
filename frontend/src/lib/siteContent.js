@@ -3,7 +3,7 @@
 
 export const BRAND = "Medical Reference Guide";
 export const SUPPORT_EMAIL = "ledgerkitsupport@gmail.com";
-export const DEFAULT_PRICE = 290; // overridden by /api/config
+export const DEFAULT_PRICE = 199; // overridden by /api/config
 export const CURRENCY = "INR";
 
 // Actual supplied sample pages (Disease Reference Guide — Chapter 13: Common Clinical Presentations)

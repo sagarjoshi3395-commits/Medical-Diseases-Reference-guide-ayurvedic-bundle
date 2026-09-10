@@ -22,7 +22,7 @@ export default function Paid() {
     try {
       const key = `fb_purchase_${data.order_id}`;
       if (window.fbq && !sessionStorage.getItem(key)) {
-        window.fbq("track", "Purchase", { value: 290, currency: "INR" });
+        window.fbq("track", "Purchase", { value: 199, currency: "INR" });
         sessionStorage.setItem(key, "1");
       }
     } catch (e) {}

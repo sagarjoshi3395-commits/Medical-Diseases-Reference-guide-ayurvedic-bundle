@@ -7,7 +7,7 @@ import { RecentSalesPill } from "./SalesTicker";
 
 export const Pricing = () => {
   const { openBuy, config } = useBuy();
-  const discountPrice = config?.price ?? 290;
+  const discountPrice = config?.price ?? 199;
   const regularPrice = config?.regular_price ?? 1999;
   const currentPrice = discountPrice;
   const includes = [
